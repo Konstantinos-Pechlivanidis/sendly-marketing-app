@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens quick helpers */
+:root {
+  --color-primary: #64D3C1;
+  --color-secondary: #1C7B7B;
+  --color-deep: #004E47;
+  --color-neutral: #D9B88C;
+  --color-accent: #E27D43;
+  --color-danger: #8A3E2E;
+}
+
+
