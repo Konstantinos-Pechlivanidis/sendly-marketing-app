@@ -13,13 +13,25 @@ async function makeRequest(shopify, path, options = {}) {
   };
 
   // Add Shopify session headers for authentication
+  console.log("Shopify object:", {
+    hasSession: !!shopify?.session,
+    hasAccessToken: !!shopify?.session?.accessToken,
+    shop: shopify?.session?.shop,
+    tokenPreview: shopify?.session?.accessToken?.substring(0, 20) + "..."
+  });
+  
   if (shopify?.session?.accessToken) {
     headers["Authorization"] = `Bearer ${shopify.session.accessToken}`;
-    console.log("Added Authorization header");
+    console.log("✅ Added Authorization header");
+  } else {
+    console.error("❌ No access token found in session!");
   }
+  
   if (shopify?.session?.shop) {
     headers["X-Shopify-Shop-Domain"] = shopify.session.shop;
-    console.log(`Added shop domain: ${shopify.session.shop}`);
+    console.log(`✅ Added shop domain: ${shopify.session.shop}`);
+  } else {
+    console.error("❌ No shop domain found in session!");
   }
 
   const merged = {
@@ -59,19 +71,20 @@ async function makeRequest(shopify, path, options = {}) {
 
 export const serverApi = {
   get: async (req, path) => {
-    const { admin } = await authenticate.admin(req);
-    return makeRequest(admin, path, { method: "GET" });
+    const { session } = await authenticate.admin(req);
+    console.log("Session info:", { shop: session?.shop, hasToken: !!session?.accessToken });
+    return makeRequest({ session }, path, { method: "GET" });
   },
   post: async (req, path, body) => {
-    const { admin } = await authenticate.admin(req);
-    return makeRequest(admin, path, { method: "POST", body: JSON.stringify(body) });
+    const { session } = await authenticate.admin(req);
+    return makeRequest({ session }, path, { method: "POST", body: JSON.stringify(body) });
   },
   put: async (req, path, body) => {
-    const { admin } = await authenticate.admin(req);
-    return makeRequest(admin, path, { method: "PUT", body: JSON.stringify(body) });
+    const { session } = await authenticate.admin(req);
+    return makeRequest({ session }, path, { method: "PUT", body: JSON.stringify(body) });
   },
   del: async (req, path) => {
-    const { admin } = await authenticate.admin(req);
-    return makeRequest(admin, path, { method: "DELETE" });
+    const { session } = await authenticate.admin(req);
+    return makeRequest({ session }, path, { method: "DELETE" });
   },
 };
