@@ -5,6 +5,8 @@ const DEFAULT_HEADERS = { "Content-Type": "application/json" };
 
 async function makeRequest(shopify, path, options = {}) {
   const url = `${BASE_URL}${path}`;
+  console.log(`Making API request to: ${url}`);
+  
   const headers = {
     ...DEFAULT_HEADERS,
     ...(options.headers || {}),
@@ -13,9 +15,11 @@ async function makeRequest(shopify, path, options = {}) {
   // Add Shopify session headers for authentication
   if (shopify?.session?.accessToken) {
     headers["Authorization"] = `Bearer ${shopify.session.accessToken}`;
+    console.log("Added Authorization header");
   }
   if (shopify?.session?.shop) {
     headers["X-Shopify-Shop-Domain"] = shopify.session.shop;
+    console.log(`Added shop domain: ${shopify.session.shop}`);
   }
 
   const merged = {
@@ -24,22 +28,32 @@ async function makeRequest(shopify, path, options = {}) {
   };
 
   try {
+    console.log(`Fetching ${url}...`);
     const res = await fetch(url, merged);
+    console.log(`Response status: ${res.status}`);
     
     if (!res.ok) {
       const text = await res.text();
-      console.error(`API Error ${res.status}:`, text);
-      throw new Error(`API ${res.status}: ${text}`);
+      console.error(`API Error ${res.status} for ${url}:`, text);
+      throw new Error(`API ${res.status}: ${text || res.statusText}`);
     }
     
     const contentType = res.headers.get("content-type") || "";
     if (contentType.includes("application/json")) {
-      return res.json();
+      const data = await res.json();
+      console.log(`API response for ${path}:`, data);
+      return data;
     }
-    return res.text();
+    const text = await res.text();
+    console.log(`API text response for ${path}:`, text);
+    return text;
   } catch (error) {
-    console.error(`API request failed for ${path}:`, error);
-    throw error;
+    console.error(`API request failed for ${url}:`, {
+      message: error.message,
+      cause: error.cause,
+      stack: error.stack
+    });
+    throw new Error(`Failed to fetch ${path}: ${error.message}`);
   }
 }
 
