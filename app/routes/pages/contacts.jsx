@@ -1,21 +1,7 @@
 import { useLoaderData } from "react-router";
 import { useState } from "react";
-import { serverApi } from "../../utils/api.server";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card";
 import { Input, Label } from "../../components/ui/Input";
-
-export const loader = async ({ request }) => {
-  try {
-    const [contacts, stats] = await Promise.all([
-      serverApi.get(request, "/contacts").catch(() => ({ items: [] })),
-      serverApi.get(request, "/contacts/stats/summary").catch(() => ({ message: "API not available" })),
-    ]);
-    return { contacts, stats };
-  } catch (error) {
-    console.error("Contacts loader error:", error);
-    return { contacts: { items: [] }, stats: { message: "Failed to load" } };
-  }
-};
 
 export default function ContactsPage() {
   const data = useLoaderData();

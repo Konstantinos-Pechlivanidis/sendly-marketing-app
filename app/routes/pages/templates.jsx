@@ -1,30 +1,7 @@
 import { useLoaderData } from "react-router";
-import { serverApi } from "../../utils/api.server";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/Tabs";
-
-export const loader = async ({ request }) => {
-  try {
-    const [templates, categories, triggers, popular, stats] = await Promise.all([
-      serverApi.get(request, "/templates").catch(() => ({ items: [] })),
-      serverApi.get(request, "/templates/categories").catch(() => ({ message: "API not available" })),
-      serverApi.get(request, "/templates/triggers").catch(() => ({ message: "API not available" })),
-      serverApi.get(request, "/templates/popular").catch(() => ({ message: "API not available" })),
-      serverApi.get(request, "/templates/stats").catch(() => ({ message: "API not available" })),
-    ]);
-    return { templates, categories, triggers, popular, stats };
-  } catch (error) {
-    console.error("Templates loader error:", error);
-    return { 
-      templates: { items: [] }, 
-      categories: { message: "Failed to load" },
-      triggers: { message: "Failed to load" },
-      popular: { message: "Failed to load" },
-      stats: { message: "Failed to load" }
-    };
-  }
-};
 
 export default function TemplatesPage() {
   const data = useLoaderData();
