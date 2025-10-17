@@ -8,10 +8,10 @@ export default function DashboardPage() {
   const health = data?.health || {};
   const debug = data?.debug || {};
 
-  // Extract metrics
-  const smsMetrics = overview.smsMetrics || {};
-  const contactMetrics = overview.contactMetrics || {};
-  const walletBalance = overview.walletBalance || {};
+  // Extract metrics - adapt to backend response structure
+  const smsMetrics = overview.sms || overview.smsMetrics || {};
+  const contactMetrics = overview.contacts || overview.contactMetrics || {};
+  const walletBalance = overview.wallet || overview.walletBalance || {};
 
   return (
     <div className="min-h-screen bg-background">
@@ -46,9 +46,9 @@ export default function DashboardPage() {
               <h3 className="text-caption text-gray-600">Total SMS Sent</h3>
               <span className="text-2xl">📱</span>
             </div>
-            <p className="text-h2">{smsMetrics.totalSent?.toLocaleString() || "0"}</p>
+            <p className="text-h2">{(smsMetrics.sent || smsMetrics.totalSent || 0).toLocaleString()}</p>
             <p className="text-caption text-primary mt-1">
-              +{smsMetrics.growth || "0%"} from last month
+              {smsMetrics.delivered || 0} delivered
             </p>
           </div>
 
@@ -58,9 +58,15 @@ export default function DashboardPage() {
               <h3 className="text-caption text-gray-600">Delivery Rate</h3>
               <span className="text-2xl">✅</span>
             </div>
-            <p className="text-h2">{smsMetrics.deliveryRate || "0%"}</p>
+            <p className="text-h2">
+              {smsMetrics.deliveryRate 
+                ? (typeof smsMetrics.deliveryRate === 'number' 
+                  ? `${smsMetrics.deliveryRate}%` 
+                  : smsMetrics.deliveryRate)
+                : "0%"}
+            </p>
             <p className="text-caption text-secondary mt-1">
-              {smsMetrics.delivered?.toLocaleString() || "0"} delivered
+              {smsMetrics.failed || 0} failed
             </p>
           </div>
 
@@ -70,9 +76,9 @@ export default function DashboardPage() {
               <h3 className="text-caption text-gray-600">Total Contacts</h3>
               <span className="text-2xl">👥</span>
             </div>
-            <p className="text-h2">{contactMetrics.total?.toLocaleString() || "0"}</p>
+            <p className="text-h2">{(contactMetrics.total || 0).toLocaleString()}</p>
             <p className="text-caption text-primary mt-1">
-              {contactMetrics.subscribed?.toLocaleString() || "0"} subscribed
+              {contactMetrics.optedIn || contactMetrics.subscribed || 0} opted in
             </p>
           </div>
 
@@ -82,9 +88,9 @@ export default function DashboardPage() {
               <h3 className="text-caption text-gray-600">Wallet Balance</h3>
               <span className="text-2xl">💰</span>
             </div>
-            <p className="text-h2">${walletBalance.balance?.toFixed(2) || "0.00"}</p>
+            <p className="text-h2">${(walletBalance.balance || 0).toFixed(2)}</p>
             <p className="text-caption text-neutral mt-1">
-              {walletBalance.credits || "0"} SMS credits
+              {walletBalance.active ? "Active" : "Inactive"}
             </p>
           </div>
         </div>
@@ -95,19 +101,33 @@ export default function DashboardPage() {
           <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
             <h2 className="text-h3 mb-4">Recent Activity</h2>
             <div className="space-y-3">
-              {overview.recentActivity && overview.recentActivity.length > 0 ? (
-                overview.recentActivity.slice(0, 5).map((activity, idx) => (
-                  <div key={idx} className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-                    <span className="text-xl">{activity.type === 'sms' ? '📨' : '💳'}</span>
-                    <div className="flex-1">
-                      <p className="text-body font-medium">{activity.description}</p>
-                      <p className="text-caption">{activity.timestamp}</p>
+              {(overview.recentMessages || overview.recentActivity || []).length > 0 || 
+               (overview.recentTransactions || []).length > 0 ? (
+                <>
+                  {(overview.recentMessages || []).slice(0, 3).map((msg, idx) => (
+                    <div key={`msg-${idx}`} className="flex items-start gap-3 p-3 bg-muted rounded-lg">
+                      <span className="text-xl">📨</span>
+                      <div className="flex-1">
+                        <p className="text-body font-medium">SMS Sent</p>
+                        <p className="text-caption">{msg.to || 'Contact'} • {new Date(msg.timestamp || Date.now()).toLocaleString()}</p>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))}
+                  {(overview.recentTransactions || []).slice(0, 2).map((tx, idx) => (
+                    <div key={`tx-${idx}`} className="flex items-start gap-3 p-3 bg-muted rounded-lg">
+                      <span className="text-xl">💳</span>
+                      <div className="flex-1">
+                        <p className="text-body font-medium">{tx.type || 'Transaction'}</p>
+                        <p className="text-caption">{tx.amount || 0} credits • {new Date(tx.timestamp || Date.now()).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  ))}
+                </>
               ) : (
                 <div className="text-center py-8">
+                  <span className="text-4xl mb-2">📭</span>
                   <p className="text-caption">No recent activity</p>
+                  <p className="text-caption text-gray-500 mt-1">Start sending SMS campaigns to see activity here</p>
                 </div>
               )}
             </div>

@@ -11,8 +11,9 @@ export default function CampaignsPage() {
   const [name, setName] = useState("");
   const [content, setContent] = useState("");
 
-  const campaigns = data?.campaigns?.items || [];
-  const stats = data?.stats || {};
+  // Adapt to backend response structure
+  const campaigns = data?.campaigns?.data?.campaigns || data?.campaigns?.items || [];
+  const stats = data?.stats?.data || data?.stats || {};
 
   const create = () => {
     fetcher.submit({ _action: "createCampaign", name, content }, { method: "post" });

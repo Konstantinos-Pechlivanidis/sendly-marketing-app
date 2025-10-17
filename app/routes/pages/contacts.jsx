@@ -7,8 +7,9 @@ export default function ContactsPage() {
   const data = useLoaderData();
   const [query, setQuery] = useState("");
 
-  const contacts = data?.contacts?.items || [];
-  const stats = data?.stats || {};
+  // Adapt to backend response structure
+  const contacts = data?.contacts?.data?.contacts || data?.contacts?.items || [];
+  const stats = data?.stats?.data || data?.stats || {};
 
   const filtered = contacts.filter((contact) => {
     const q = query.trim().toLowerCase();

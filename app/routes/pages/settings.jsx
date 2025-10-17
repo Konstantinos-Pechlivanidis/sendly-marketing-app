@@ -293,6 +293,6 @@ export default function SettingsPage() {
           </TabsContent>
         </Tabs>
       </main>
-    </div>
+          </div>
   );
 }
