@@ -3,7 +3,7 @@ import { authenticate } from "../shopify.server";
 const BASE_URL = "https://sendly-marketing-backend.onrender.com/api";
 const DEFAULT_HEADERS = { "Content-Type": "application/json" };
 
-async function request(shopify, path, options = {}) {
+async function makeRequest(shopify, path, options = {}) {
   const url = `${BASE_URL}${path}`;
   const headers = {
     ...DEFAULT_HEADERS,
@@ -23,35 +23,41 @@ async function request(shopify, path, options = {}) {
     ...options,
   };
 
-  const res = await fetch(url, merged);
-  
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`API ${res.status}: ${text}`);
+  try {
+    const res = await fetch(url, merged);
+    
+    if (!res.ok) {
+      const text = await res.text();
+      console.error(`API Error ${res.status}:`, text);
+      throw new Error(`API ${res.status}: ${text}`);
+    }
+    
+    const contentType = res.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      return res.json();
+    }
+    return res.text();
+  } catch (error) {
+    console.error(`API request failed for ${path}:`, error);
+    throw error;
   }
-  
-  const contentType = res.headers.get("content-type") || "";
-  if (contentType.includes("application/json")) {
-    return res.json();
-  }
-  return res.text();
 }
 
 export const serverApi = {
-  get: async (request, path) => {
-    const { admin } = await authenticate.admin(request);
-    return request(admin, path, { method: "GET" });
+  get: async (req, path) => {
+    const { admin } = await authenticate.admin(req);
+    return makeRequest(admin, path, { method: "GET" });
   },
-  post: async (request, path, body) => {
-    const { admin } = await authenticate.admin(request);
-    return request(admin, path, { method: "POST", body: JSON.stringify(body) });
+  post: async (req, path, body) => {
+    const { admin } = await authenticate.admin(req);
+    return makeRequest(admin, path, { method: "POST", body: JSON.stringify(body) });
   },
-  put: async (request, path, body) => {
-    const { admin } = await authenticate.admin(request);
-    return request(admin, path, { method: "PUT", body: JSON.stringify(body) });
+  put: async (req, path, body) => {
+    const { admin } = await authenticate.admin(req);
+    return makeRequest(admin, path, { method: "PUT", body: JSON.stringify(body) });
   },
-  del: async (request, path) => {
-    const { admin } = await authenticate.admin(request);
-    return request(admin, path, { method: "DELETE" });
+  del: async (req, path) => {
+    const { admin } = await authenticate.admin(req);
+    return makeRequest(admin, path, { method: "DELETE" });
   },
 };

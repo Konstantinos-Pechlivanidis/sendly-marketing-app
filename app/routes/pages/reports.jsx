@@ -1,168 +1,90 @@
-import { useLoaderData } from "react-router";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card";
+import { useLoaderData, useFetcher } from "react-router";
+import { useState } from "react";
 import { Button } from "../../components/ui/Button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/Tabs";
 
 export default function ReportsPage() {
   const data = useLoaderData();
+  const fetcher = useFetcher();
+  const [dateRange, setDateRange] = useState("7days");
 
-  const exportData = async (type) => {
-    try {
-      const response = await fetch(`/api/reports/export?format=csv&type=${type}`);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${type}-report.csv`;
-      a.click();
-    } catch (error) {
-      console.error("Export error:", error);
-    }
+  const reports = data?.reports || {};
+
+  const exportReport = (type) => {
+    fetcher.submit(
+      { _action: "exportReport", type, dateRange },
+      { method: "post" }
+    );
   };
 
   return (
     <div className="min-h-screen bg-background">
       {/* iOS 18 Glass Header */}
-      <header className="glass-surface border-b border-border sticky top-0 z-10">
-        <div className="px-6 py-4">
-          <h1 className="text-h1 text-deep">Reports</h1>
-          <p className="text-caption text-muted mt-1">Analytics and performance insights</p>
+      <header className="glass-surface sticky top-0 z-10">
+        <div className="px-6 py-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-h1">Reports</h1>
+            <p className="text-caption mt-1">Analytics and performance insights</p>
+          </div>
+          <Button variant="primary" onClick={() => exportReport("overview")} className="rounded-xl">
+            Export Report
+          </Button>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="p-6">
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-6">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
-            <TabsTrigger value="automations">Automations</TabsTrigger>
-            <TabsTrigger value="messaging">Messaging</TabsTrigger>
-            <TabsTrigger value="revenue">Revenue</TabsTrigger>
-          </TabsList>
+      <main className="p-6 space-y-6">
+        {/* Date Range Selector */}
+        <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
+          <h2 className="text-h3 mb-4">Date Range</h2>
+          <div className="flex gap-2">
+            {["7days", "30days", "90days", "all"].map((range) => (
+              <button
+                key={range}
+                onClick={() => setDateRange(range)}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  dateRange === range
+                    ? "bg-primary text-white"
+                    : "bg-muted text-body hover:bg-primary/10"
+                }`}
+              >
+                {range === "7days" && "Last 7 Days"}
+                {range === "30days" && "Last 30 Days"}
+                {range === "90days" && "Last 90 Days"}
+                {range === "all" && "All Time"}
+              </button>
+            ))}
+          </div>
+        </div>
 
-          <TabsContent value="overview" className="space-y-4">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <Card className="hover:shadow-elevated transition-shadow duration-200">
-                <CardHeader>
-                  <CardTitle className="text-deep">Overview Report</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="bg-muted rounded-lg p-3">
-                      <pre className="text-xs text-muted overflow-auto">
-                        {JSON.stringify(data?.overview || {}, null, 2)}
-                      </pre>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => exportData('overview')}
-                    >
-                      Export CSV
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
+        {/* Overview Stats */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
+            <h3 className="text-caption mb-2">Total Messages</h3>
+            <p className="text-h2">{reports.totalMessages || 0}</p>
+          </div>
+          <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
+            <h3 className="text-caption mb-2">Delivery Rate</h3>
+            <p className="text-h2">{reports.deliveryRate || "0%"}</p>
+          </div>
+          <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
+            <h3 className="text-caption mb-2">Open Rate</h3>
+            <p className="text-h2">{reports.openRate || "0%"}</p>
+          </div>
+          <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
+            <h3 className="text-caption mb-2">Revenue</h3>
+            <p className="text-h2">${reports.revenue || "0.00"}</p>
+          </div>
+        </div>
 
-          <TabsContent value="campaigns" className="space-y-4">
-            <Card className="hover:shadow-elevated transition-shadow duration-200">
-              <CardHeader>
-                <CardTitle className="text-deep">Campaign Reports</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="bg-muted rounded-lg p-3">
-                    <pre className="text-xs text-muted overflow-auto">
-                      {JSON.stringify(data?.campaigns || {}, null, 2)}
-                    </pre>
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => exportData('campaigns')}
-                  >
-                    Export CSV
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="automations" className="space-y-4">
-            <Card className="hover:shadow-elevated transition-shadow duration-200">
-              <CardHeader>
-                <CardTitle className="text-deep">Automation Reports</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="bg-muted rounded-lg p-3">
-                    <pre className="text-xs text-muted overflow-auto">
-                      {JSON.stringify(data?.automations || {}, null, 2)}
-                    </pre>
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => exportData('automations')}
-                  >
-                    Export CSV
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="messaging" className="space-y-4">
-            <Card className="hover:shadow-elevated transition-shadow duration-200">
-              <CardHeader>
-                <CardTitle className="text-deep">Messaging Reports</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="bg-muted rounded-lg p-3">
-                    <pre className="text-xs text-muted overflow-auto">
-                      {JSON.stringify(data?.messaging || {}, null, 2)}
-                    </pre>
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => exportData('messaging')}
-                  >
-                    Export CSV
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="revenue" className="space-y-4">
-            <Card className="hover:shadow-elevated transition-shadow duration-200">
-              <CardHeader>
-                <CardTitle className="text-deep">Revenue Reports</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="bg-muted rounded-lg p-3">
-                    <pre className="text-xs text-muted overflow-auto">
-                      {JSON.stringify(data?.revenue || {}, null, 2)}
-                    </pre>
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => exportData('revenue')}
-                  >
-                    Export CSV
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        {/* Detailed Reports */}
+        <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
+          <h2 className="text-h3 mb-4">Campaign Performance</h2>
+          <div className="bg-muted rounded-lg p-4">
+            <pre className="text-xs text-body overflow-auto">
+              {JSON.stringify(reports, null, 2)}
+            </pre>
+          </div>
+        </div>
       </main>
     </div>
   );

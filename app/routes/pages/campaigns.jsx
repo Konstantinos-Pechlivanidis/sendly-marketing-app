@@ -22,11 +22,11 @@ export default function CampaignsPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* iOS 18 Glass Header */}
-      <header className="glass-surface border-b border-border sticky top-0 z-10">
+      <header className="glass-surface sticky top-0 z-10">
         <div className="px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-h1 text-deep">Campaigns</h1>
-            <p className="text-caption text-muted mt-1">Manage your SMS marketing campaigns</p>
+            <h1 className="text-h1">Campaigns</h1>
+            <p className="text-caption mt-1">Manage your SMS marketing campaigns</p>
           </div>
           <Button variant="primary" onClick={toggle} className="rounded-xl">
             New Campaign
@@ -35,26 +35,38 @@ export default function CampaignsPage() {
       </header>
 
       {/* Main Content */}
-      <main className="p-6">
-        <div className="grid grid-cols-1 gap-6">
-          {(data?.campaigns?.items || []).map((campaign) => (
-            <Card key={campaign.id} className="hover:shadow-elevated transition-shadow duration-200">
-              <CardHeader>
-                <CardTitle className="text-deep">{campaign.name}</CardTitle>
-                <p className="text-caption text-muted">{campaign.status}</p>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <p className="text-body text-deep">{campaign.content}</p>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">Edit</Button>
-                    <Button variant="danger" size="sm">Delete</Button>
+      <main className="p-6 space-y-6">
+        {(data?.campaigns?.items && data.campaigns.items.length > 0) ? (
+          <div className="grid grid-cols-1 gap-6">
+            {data.campaigns.items.map((campaign) => (
+              <div key={campaign.id} className="bg-surface rounded-xl shadow-subtle border border-border p-6 hover:shadow-elevated transition-shadow duration-200">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h2 className="text-h3">{campaign.name}</h2>
+                    <p className="text-caption mt-1">{campaign.status}</p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                <div className="space-y-4">
+                  <p className="text-body">{campaign.content}</p>
+                  <div className="flex gap-3">
+                    <Button variant="outline" size="sm" className="rounded-lg">Edit</Button>
+                    <Button variant="danger" size="sm" className="rounded-lg">Delete</Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-surface rounded-xl shadow-subtle border border-border p-12 text-center">
+            <div className="max-w-md mx-auto">
+              <h3 className="text-h3 mb-2">No campaigns yet</h3>
+              <p className="text-caption mb-6">Create your first SMS campaign to get started</p>
+              <Button variant="primary" onClick={toggle} className="rounded-xl">
+                Create Campaign
+              </Button>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* iOS 18 Modal */}

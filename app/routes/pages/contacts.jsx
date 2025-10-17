@@ -20,10 +20,10 @@ export default function ContactsPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* iOS 18 Glass Header */}
-      <header className="glass-surface border-b border-border sticky top-0 z-10">
+      <header className="glass-surface sticky top-0 z-10">
         <div className="px-6 py-4">
-          <h1 className="text-h1 text-deep">Contacts</h1>
-          <p className="text-caption text-muted mt-1">Manage your contact list</p>
+          <h1 className="text-h1">Contacts</h1>
+          <p className="text-caption mt-1">Manage your contact list</p>
         </div>
       </header>
 

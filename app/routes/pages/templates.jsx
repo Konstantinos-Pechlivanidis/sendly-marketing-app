@@ -1,108 +1,70 @@
 import { useLoaderData } from "react-router";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card";
+import { useState } from "react";
+import { Input, Label } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/Tabs";
 
 export default function TemplatesPage() {
   const data = useLoaderData();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const templates = data?.templates?.items || [];
+  const filtered = templates.filter((t) =>
+    t.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.content?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-background">
       {/* iOS 18 Glass Header */}
-      <header className="glass-surface border-b border-border sticky top-0 z-10">
+      <header className="glass-surface sticky top-0 z-10">
         <div className="px-6 py-4">
-          <h1 className="text-h1 text-deep">Templates</h1>
-          <p className="text-caption text-muted mt-1">Browse and manage your message templates</p>
+          <h1 className="text-h1">Templates</h1>
+          <p className="text-caption mt-1">Pre-built message templates for your campaigns</p>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="p-6">
-        <Tabs defaultValue="all" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6">
-            <TabsTrigger value="all">All Templates</TabsTrigger>
-            <TabsTrigger value="categories">Categories</TabsTrigger>
-            <TabsTrigger value="popular">Popular</TabsTrigger>
-            <TabsTrigger value="stats">Statistics</TabsTrigger>
-          </TabsList>
+      <main className="p-6 space-y-6">
+        {/* Search */}
+        <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
+          <Label htmlFor="search">Search Templates</Label>
+          <Input
+            id="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by name or content"
+            className="mt-1"
+          />
+        </div>
 
-          <TabsContent value="all" className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {(data?.templates?.items || []).map((template) => (
-                <Card key={template.id} className="hover:shadow-elevated transition-shadow duration-200">
-                  <CardHeader>
-                    <CardTitle className="text-deep">{template.name}</CardTitle>
-                    <p className="text-caption text-muted">{template.category}</p>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <p className="text-body text-deep">{template.content}</p>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">Preview</Button>
-                        <Button variant="primary" size="sm">Use Template</Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+        {/* Templates Grid */}
+        {filtered.length > 0 ? (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((template) => (
+              <div
+                key={template.id}
+                className="bg-surface rounded-xl shadow-subtle border border-border p-6 hover:shadow-elevated transition-shadow duration-200"
+              >
+                <h2 className="text-h3 mb-2">{template.name}</h2>
+                <p className="text-caption mb-4">{template.category}</p>
+                <div className="bg-muted rounded-lg p-4 mb-4">
+                  <p className="text-body text-sm">{template.content}</p>
+                </div>
+                <Button variant="primary" size="sm" className="rounded-lg w-full">
+                  Use Template
+                </Button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-surface rounded-xl shadow-subtle border border-border p-12 text-center">
+            <div className="max-w-md mx-auto">
+              <h3 className="text-h3 mb-2">No templates found</h3>
+              <p className="text-caption">
+                {searchQuery ? "Try different search terms" : "No templates available"}
+              </p>
             </div>
-          </TabsContent>
-
-          <TabsContent value="categories" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-deep">Template Categories</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-muted rounded-lg p-3">
-                  <pre className="text-xs text-muted overflow-auto">
-                    {JSON.stringify(data?.categories || {}, null, 2)}
-                  </pre>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="popular" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-deep">Popular Templates</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-muted rounded-lg p-3">
-                  <pre className="text-xs text-muted overflow-auto">
-                    {JSON.stringify(data?.popular || {}, null, 2)}
-                  </pre>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="stats" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-deep">Template Statistics</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-muted rounded-lg p-3">
-                  <pre className="text-xs text-muted overflow-auto">
-                    {JSON.stringify(data?.stats || {}, null, 2)}
-                  </pre>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        {/* Empty State */}
-        {(!data?.templates?.items || data.templates.items.length === 0) && (
-          <Card className="text-center py-12">
-            <CardContent>
-              <div className="text-neutral text-4xl mb-4">📝</div>
-              <h3 className="text-h3 text-deep mb-2">No templates found</h3>
-              <p className="text-body text-muted">Start by creating your first template</p>
-            </CardContent>
-          </Card>
+          </div>
         )}
       </main>
     </div>

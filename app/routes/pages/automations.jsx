@@ -1,162 +1,91 @@
 import { useLoaderData, useFetcher } from "react-router";
-import { useState, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
-import { Input, Label, Textarea } from "../../components/ui/Input";
 
 export default function AutomationsPage() {
   const data = useLoaderData();
   const fetcher = useFetcher();
-  const [editing, setEditing] = useState(null);
-  const [message, setMessage] = useState("");
-  const [enabled, setEnabled] = useState(false);
 
-  const startEdit = useCallback((automation) => {
-    setEditing(automation);
-    setMessage(automation.message || "");
-    setEnabled(automation.enabled || false);
-  }, []);
+  const automations = data?.automations?.items || [];
 
-  const saveEdit = useCallback(() => {
-    if (editing) {
-      fetcher.submit({
-        _action: "updateAutomation",
-        type: editing.type,
-        enabled: enabled.toString(),
-        message,
-        schedule: JSON.stringify(editing.schedule || {})
-      }, { method: "post" });
-      setEditing(null);
-    }
-  }, [fetcher, editing, enabled, message]);
-
-  const resetAutomation = useCallback((type) => {
-    fetcher.submit({ _action: "resetAutomation", type }, { method: "post" });
-  }, [fetcher]);
+  const toggleAutomation = (id, enabled) => {
+    fetcher.submit(
+      { _action: "toggleAutomation", id, enabled: !enabled },
+      { method: "post" }
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background">
       {/* iOS 18 Glass Header */}
-      <header className="glass-surface border-b border-border sticky top-0 z-10">
+      <header className="glass-surface sticky top-0 z-10">
         <div className="px-6 py-4">
-          <h1 className="text-h1 text-deep">Automations</h1>
-          <p className="text-caption text-muted mt-1">Configure automated messaging sequences</p>
+          <h1 className="text-h1">Automations</h1>
+          <p className="text-caption mt-1">Automated SMS campaigns based on customer behavior</p>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="p-6">
-        <div className="grid grid-cols-1 gap-6">
-          {(data?.automations?.items || []).map((automation) => (
-            <Card key={automation.type} className="hover:shadow-elevated transition-shadow duration-200">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-deep capitalize">{automation.type} Automation</CardTitle>
-                    <p className="text-caption text-muted">
-                      {automation.enabled ? "Enabled" : "Disabled"}
+      <main className="p-6 space-y-6">
+        {automations.length > 0 ? (
+          <div className="grid grid-cols-1 gap-6">
+            {automations.map((automation) => (
+              <div
+                key={automation.id}
+                className="bg-surface rounded-xl shadow-subtle border border-border p-6 hover:shadow-elevated transition-shadow duration-200"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <h2 className="text-h3">{automation.name}</h2>
+                    <p className="text-caption mt-1">{automation.description}</p>
+                  </div>
+                  <div className="ml-4">
+                    <button
+                      onClick={() => toggleAutomation(automation.id, automation.enabled)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        automation.enabled ? "bg-primary" : "bg-gray-200"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          automation.enabled ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="bg-muted rounded-lg p-4">
+                    <p className="text-body text-sm">
+                      <strong>Trigger:</strong> {automation.trigger}
+                    </p>
+                    <p className="text-body text-sm mt-2">
+                      <strong>Message:</strong> {automation.message}
                     </p>
                   </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => startEdit(automation)}
-                    >
+                  <div className="flex gap-3 pt-2">
+                    <Button variant="outline" size="sm" className="rounded-lg">
                       Edit
                     </Button>
-                    <Button 
-                      variant="danger" 
-                      size="sm" 
-                      onClick={() => resetAutomation(automation.type)}
-                    >
-                      Reset
+                    <Button variant="secondary" size="sm" className="rounded-lg">
+                      View Stats
                     </Button>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <p className="text-body text-deep">{automation.message}</p>
-                  <div className="bg-muted rounded-lg p-3">
-                    <pre className="text-xs text-muted overflow-auto">
-                      {JSON.stringify(automation.schedule || {}, null, 2)}
-                    </pre>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Statistics */}
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="text-deep">Automation Statistics</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-muted rounded-lg p-3">
-              <pre className="text-xs text-muted overflow-auto">
-                {JSON.stringify(data?.stats || {}, null, 2)}
-              </pre>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-surface rounded-xl shadow-subtle border border-border p-12 text-center">
+            <div className="max-w-md mx-auto">
+              <h3 className="text-h3 mb-2">No automations configured</h3>
+              <p className="text-caption mb-6">Set up automated SMS campaigns to engage customers</p>
+              <Button variant="primary" className="rounded-xl">
+                Create Automation
+              </Button>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Empty State */}
-        {(!data?.automations?.items || data.automations.items.length === 0) && (
-          <Card className="text-center py-12">
-            <CardContent>
-              <div className="text-neutral text-4xl mb-4">🤖</div>
-              <h3 className="text-h3 text-deep mb-2">No automations configured</h3>
-              <p className="text-body text-muted">Set up automated messaging sequences</p>
-            </CardContent>
-          </Card>
+          </div>
         )}
       </main>
-
-      {/* Edit Modal */}
-      {editing && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md glass-surface">
-            <CardHeader>
-              <CardTitle className="text-deep">Edit {editing.type} Automation</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="enabled"
-                    checked={enabled}
-                    onChange={(e) => setEnabled(e.target.checked)}
-                    className="rounded border-border"
-                  />
-                  <Label htmlFor="enabled">Enable automation</Label>
-                </div>
-                <div>
-                  <Label htmlFor="message">Message Content</Label>
-                  <Textarea
-                    id="message"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Enter automation message"
-                    className="mt-1"
-                  />
-                </div>
-                <div className="flex justify-end gap-3 pt-4">
-                  <Button variant="outline" onClick={() => setEditing(null)}>
-                    Cancel
-                  </Button>
-                  <Button variant="primary" onClick={saveEdit}>
-                    Save Changes
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
     </div>
   );
 }
