@@ -6,6 +6,7 @@ export default function DashboardPage() {
   const overview = data?.overview?.data || {};
   const quickStats = data?.quickStats?.data || {};
   const health = data?.health || {};
+  const debug = data?.debug || {};
 
   // Extract metrics
   const smsMetrics = overview.smsMetrics || {};
@@ -17,8 +18,21 @@ export default function DashboardPage() {
       {/* iOS 18 Glass Header */}
       <header className="glass-surface sticky top-0 z-10">
         <div className="px-6 py-4">
-          <h1 className="text-h1">Dashboard</h1>
-          <p className="text-caption mt-1">Overview of your SMS marketing performance</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-h1">Dashboard</h1>
+              <p className="text-caption mt-1">Overview of your SMS marketing performance</p>
+            </div>
+            {/* Debug Info Badge */}
+            {debug.sessionId && (
+              <div className="px-4 py-2 bg-primary/10 rounded-xl border border-primary/20">
+                <p className="text-xs text-deep font-mono">
+                  🔑 Session: {debug.sessionId.substring(0, 8)}...
+                </p>
+                <p className="text-xs text-primary font-mono">{debug.shop}</p>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -147,7 +161,7 @@ export default function DashboardPage() {
         {quickStats.campaigns && (
           <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
             <h2 className="text-h3 mb-4">Campaign Performance</h2>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div className="p-4 bg-muted rounded-lg">
                 <p className="text-caption text-gray-600 mb-1">Active Campaigns</p>
                 <p className="text-h2 text-deep">{quickStats.campaigns.active || 0}</p>
@@ -163,7 +177,60 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
+
+        {/* Debug Panel - Session Token Info */}
+        {debug && (
+          <details className="bg-deep/5 rounded-xl shadow-subtle border border-deep/20">
+            <summary className="cursor-pointer p-4 hover:bg-deep/10 rounded-xl transition-colors duration-200">
+              <span className="text-body font-semibold text-deep">
+                🔧 Debug Information (Click to expand)
+              </span>
+            </summary>
+            <div className="p-6 space-y-4 border-t border-deep/20">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="p-4 bg-surface rounded-lg border border-border">
+                  <p className="text-caption text-gray-600 mb-2">Session ID</p>
+                  <p className="text-sm font-mono text-deep break-all select-all">
+                    {debug.sessionId || "N/A"}
+                  </p>
+                </div>
+                <div className="p-4 bg-surface rounded-lg border border-border">
+                  <p className="text-caption text-gray-600 mb-2">Shop Domain</p>
+                  <p className="text-sm font-mono text-primary break-all select-all">
+                    {debug.shop || "N/A"}
+                  </p>
+                </div>
+                <div className="p-4 bg-surface rounded-lg border border-border">
+                  <p className="text-caption text-gray-600 mb-2">Access Token (Preview)</p>
+                  <p className="text-sm font-mono text-secondary break-all select-all">
+                    {debug.tokenPreview || "N/A"}
+                  </p>
+                </div>
+                <div className="p-4 bg-surface rounded-lg border border-border">
+                  <p className="text-caption text-gray-600 mb-2">Timestamp</p>
+                  <p className="text-sm font-mono text-deep">
+                    {debug.timestamp ? new Date(debug.timestamp).toLocaleString() : "N/A"}
+                  </p>
+                </div>
+              </div>
+              {debug.error && (
+                <div className="p-4 bg-danger/10 rounded-lg border border-danger/20">
+                  <p className="text-caption text-danger mb-2">⚠️ Error</p>
+                  <p className="text-sm font-mono text-danger break-all">
+                    {debug.error}
+                  </p>
+                </div>
+              )}
+              <div className="p-4 bg-neutral/10 rounded-lg border border-neutral/20">
+                <p className="text-caption text-deep mb-2">💡 Tip</p>
+                <p className="text-sm text-gray-700">
+                  Copy the Session ID or Access Token to use in API testing. Check the server console for detailed API logs.
+                </p>
+              </div>
+            </div>
+          </details>
+        )}
       </main>
-    </div>
+      </div>
   );
 }

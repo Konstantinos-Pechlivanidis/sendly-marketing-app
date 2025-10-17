@@ -13,18 +13,23 @@ async function makeRequest(shopify, path, options = {}) {
   };
 
   // Add Shopify session headers for authentication
-  console.log("Shopify object:", {
+  console.log("🔍 Session object details:", {
     hasSession: !!shopify?.session,
+    sessionId: shopify?.session?.id?.substring(0, 30) + "...",
     hasAccessToken: !!shopify?.session?.accessToken,
+    accessTokenPreview: shopify?.session?.accessToken?.substring(0, 30) + "...",
     shop: shopify?.session?.shop,
-    tokenPreview: shopify?.session?.accessToken?.substring(0, 20) + "..."
   });
   
-  if (shopify?.session?.accessToken) {
-    headers["Authorization"] = `Bearer ${shopify.session.accessToken}`;
-    console.log("✅ Added Authorization header");
+  // Try session ID first (for backend), fallback to accessToken
+  const sessionToken = shopify?.session?.id || shopify?.session?.accessToken;
+  
+  if (sessionToken) {
+    headers["Authorization"] = `Bearer ${sessionToken}`;
+    console.log(`✅ Added Authorization header with ${shopify?.session?.id ? "session ID" : "access token"}`);
+    console.log(`🔑 Token preview: ${sessionToken.substring(0, 30)}...`);
   } else {
-    console.error("❌ No access token found in session!");
+    console.error("❌ No session token found!");
   }
   
   if (shopify?.session?.shop) {
