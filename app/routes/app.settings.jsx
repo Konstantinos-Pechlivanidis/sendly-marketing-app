@@ -1,3 +1,3 @@
-export { loader, default } from "./pages/settings";
+export { loader, action, default } from "./pages/settings";
 
 

@@ -2,6 +2,157 @@
 @tailwind components;
 @tailwind utilities;
 
+/* iOS 18 Design Tokens */
+:root {
+  /* Brand Palette */
+  --color-primary: #64D3C1;
+  --color-secondary: #1C7B7B;
+  --color-deep: #004E47;
+  --color-neutral: #D9B88C;
+  --color-accent: #E27D43;
+  --color-danger: #8A3E2E;
+
+  /* System Tokens */
+  --surface: #FFFFFF;
+  --background: #F8F8F8;
+  --border: rgba(0, 0, 0, 0.1);
+  --muted: rgba(0, 0, 0, 0.05);
+  --ring: var(--color-primary);
+
+  /* State Tokens */
+  --primary-hover: #5BC4B1;
+  --primary-active: #52B5A1;
+  --primary-disabled: #A8E6D9;
+  
+  --secondary-hover: #1A6B6B;
+  --secondary-active: #185B5B;
+  --secondary-disabled: #4D9B9B;
+  
+  --deep-hover: #003D37;
+  --deep-active: #002E29;
+  --deep-disabled: #4D7A75;
+  
+  --neutral-hover: #D4B082;
+  --neutral-active: #CFA878;
+  --neutral-disabled: #E5D1B8;
+  
+  --accent-hover: #D66A2F;
+  --accent-active: #CA5D2B;
+  --accent-disabled: #F0A67A;
+  
+  --danger-hover: #7A3629;
+  --danger-active: #6A2F24;
+  --danger-disabled: #B56B5A;
+
+  /* iOS 18 Radius Scale */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-2xl: 28px;
+
+  /* iOS 18 Spacing (4/8pt rhythm) */
+  --space-4pt: 4px;
+  --space-8pt: 8px;
+  --space-12pt: 12px;
+  --space-16pt: 16px;
+  --space-20pt: 20px;
+  --space-24pt: 24px;
+  --space-32pt: 32px;
+
+  /* iOS 18 Shadows */
+  --shadow-subtle: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-elevated: 0 4px 12px rgba(0,0,0,0.12);
+
+  /* iOS 18 Motion */
+  --transition-fast: 150ms ease-out;
+  --transition-normal: 200ms ease-in-out;
+  --transition-slow: 300ms ease-in-out;
+}
+
+/* Semantic Color Utilities */
+.bg-primary { background-color: var(--color-primary); }
+.text-primary { color: var(--color-primary); }
+.border-primary { border-color: var(--color-primary); }
+.ring-primary { --tw-ring-color: var(--color-primary); }
+
+.bg-secondary { background-color: var(--color-secondary); }
+.text-secondary { color: var(--color-secondary); }
+.border-secondary { border-color: var(--color-secondary); }
+
+.bg-deep { background-color: var(--color-deep); }
+.text-deep { color: var(--color-deep); }
+.border-deep { border-color: var(--color-deep); }
+
+.bg-neutral { background-color: var(--color-neutral); }
+.text-neutral { color: var(--color-neutral); }
+.border-neutral { border-color: var(--color-neutral); }
+
+.bg-accent { background-color: var(--color-accent); }
+.text-accent { color: var(--color-accent); }
+.border-accent { border-color: var(--color-accent); }
+
+.bg-danger { background-color: var(--color-danger); }
+.text-danger { color: var(--color-danger); }
+.border-danger { border-color: var(--color-danger); }
+
+.bg-surface { background-color: var(--surface); }
+.text-surface { color: var(--surface); }
+.border-surface { border-color: var(--surface); }
+
+.bg-background { background-color: var(--background); }
+.text-background { color: var(--background); }
+.border-background { border-color: var(--background); }
+
+.bg-border { background-color: var(--border); }
+.text-border { color: var(--border); }
+.border-border { border-color: var(--border); }
+
+.bg-muted { background-color: var(--muted); }
+.text-muted { color: var(--muted); }
+.border-muted { border-color: var(--muted); }
+
+/* iOS 18 Glass Effect */
+.glass-surface {
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* iOS 18 Typography Scale */
+.text-h1 {
+  font-size: 2.25rem;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.text-h2 {
+  font-size: 1.875rem;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.text-h3 {
+  font-size: 1.5rem;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.text-body {
+  font-size: 1rem;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.text-caption {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
 /* Design tokens quick helpers */
 :root {
   --color-primary: #64D3C1;

@@ -1,3 +1,3 @@
-export { loader, default } from "./pages/campaigns";
+export { loader, action, default } from "./pages/campaigns";
 
 

@@ -1,48 +1,137 @@
-import { useLoaderData } from "react-router";
-import { Page, Card, Text, Button, Modal, TextField } from "@shopify/polaris";
+import { useLoaderData, useFetcher } from "react-router";
 import { useState, useCallback } from "react";
-import { api } from "../../utils/api.client";
+import { serverApi } from "../../utils/api.server";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Input, Label, Textarea } from "../../components/ui/Input";
 
-export const loader = async () => {
-  const data = await api.get("/campaigns");
-  return data;
+export const loader = async ({ request }) => {
+  try {
+    const [campaigns, stats] = await Promise.all([
+      serverApi.get(request, "/campaigns").catch(() => ({ items: [] })),
+      serverApi.get(request, "/campaigns/stats/summary").catch(() => ({ message: "API not available" })),
+    ]);
+    return { campaigns, stats };
+  } catch (error) {
+    console.error("Campaigns loader error:", error);
+    return { campaigns: { items: [] }, stats: { message: "Failed to load" } };
+  }
+};
+
+export const action = async ({ request }) => {
+  const formData = await request.formData();
+  const { _action, ...values } = Object.fromEntries(formData);
+
+  if (_action === "createCampaign") {
+    try {
+      await serverApi.post(request, "/campaigns", { 
+        name: values.name, 
+        content: values.content 
+      });
+      return { success: true };
+    } catch (error) {
+      console.error("Create campaign error:", error);
+      return { success: false, error: error.message };
+    }
+  }
+  return null;
 };
 
 export default function CampaignsPage() {
   const data = useLoaderData();
+  const fetcher = useFetcher();
   const [open, setOpen] = useState(false);
   const toggle = useCallback(() => setOpen((o) => !o), []);
   const [name, setName] = useState("");
   const [content, setContent] = useState("");
 
-  const create = async () => {
-    await api.post("/campaigns", { name, content });
-    window.location.reload();
+  const create = () => {
+    fetcher.submit({ _action: "createCampaign", name, content }, { method: "post" });
+    setOpen(false);
+    setName("");
+    setContent("");
   };
 
   return (
-    <Page title="Campaigns" primaryAction={{ content: "New campaign", onAction: toggle }}>
-      <div className="grid grid-cols-1 gap-4">
-        {(data?.items || []).map((c) => (
-          <Card key={c.id}>
-            <Card.Section>
-              <Text as="h3" variant="headingMd">{c.name}</Text>
-              <Text as="p" variant="bodyMd" tone="subdued">{c.status}</Text>
-            </Card.Section>
-          </Card>
-        ))}
-      </div>
-
-      <Modal open={open} onClose={toggle} title="Create campaign" primaryAction={{ content: "Create", onAction: create }}>
-        <Modal.Section>
-          <div className="space-y-3">
-            <TextField label="Name" value={name} onChange={setName} autoComplete="off" />
-            <TextField label="Content" value={content} onChange={setContent} multiline />
+    <div className="min-h-screen bg-background">
+      {/* iOS 18 Glass Header */}
+      <header className="glass-surface border-b border-border sticky top-0 z-10">
+        <div className="px-6 py-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-h1 text-deep">Campaigns</h1>
+            <p className="text-caption text-muted mt-1">Manage your SMS marketing campaigns</p>
           </div>
-        </Modal.Section>
-      </Modal>
-    </Page>
+          <Button variant="primary" onClick={toggle} className="rounded-xl">
+            New Campaign
+          </Button>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="p-6">
+        <div className="grid grid-cols-1 gap-6">
+          {(data?.campaigns?.items || []).map((campaign) => (
+            <Card key={campaign.id} className="hover:shadow-elevated transition-shadow duration-200">
+              <CardHeader>
+                <CardTitle className="text-deep">{campaign.name}</CardTitle>
+                <p className="text-caption text-muted">{campaign.status}</p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <p className="text-body text-deep">{campaign.content}</p>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm">Edit</Button>
+                    <Button variant="danger" size="sm">Delete</Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </main>
+
+      {/* iOS 18 Modal */}
+      {open && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md glass-surface">
+            <CardHeader>
+              <CardTitle className="text-deep">Create Campaign</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="name">Campaign Name</Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter campaign name"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="content">Message Content</Label>
+                  <Textarea
+                    id="content"
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    placeholder="Enter your message"
+                    className="mt-1"
+                  />
+                </div>
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button variant="outline" onClick={toggle}>
+                    Cancel
+                  </Button>
+                  <Button variant="primary" onClick={create}>
+                    Create Campaign
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
   );
 }
-
-

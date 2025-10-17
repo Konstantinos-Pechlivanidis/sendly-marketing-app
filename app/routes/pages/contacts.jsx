@@ -1,46 +1,106 @@
 import { useLoaderData } from "react-router";
-import { Page, Card, Text, TextField } from "@shopify/polaris";
 import { useState } from "react";
-import { api } from "../../utils/api.client";
+import { serverApi } from "../../utils/api.server";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card";
+import { Input, Label } from "../../components/ui/Input";
 
-export const loader = async () => {
-  const data = await api.get("/contacts");
-  return data;
+export const loader = async ({ request }) => {
+  try {
+    const [contacts, stats] = await Promise.all([
+      serverApi.get(request, "/contacts").catch(() => ({ items: [] })),
+      serverApi.get(request, "/contacts/stats/summary").catch(() => ({ message: "API not available" })),
+    ]);
+    return { contacts, stats };
+  } catch (error) {
+    console.error("Contacts loader error:", error);
+    return { contacts: { items: [] }, stats: { message: "Failed to load" } };
+  }
 };
 
 export default function ContactsPage() {
   const data = useLoaderData();
   const [query, setQuery] = useState("");
 
-  const filtered = (data?.items || []).filter((c) => {
+  const filtered = (data?.contacts?.items || []).filter((contact) => {
     const q = query.trim().toLowerCase();
     if (!q) return true;
     return (
-      c.name?.toLowerCase().includes(q) ||
-      c.phone?.toLowerCase().includes(q) ||
-      c.email?.toLowerCase().includes(q)
+      contact.name?.toLowerCase().includes(q) ||
+      contact.phone?.toLowerCase().includes(q) ||
+      contact.email?.toLowerCase().includes(q)
     );
   });
 
   return (
-    <Page title="Contacts">
-      <Card>
-        <Card.Section>
-          <TextField label="Filter" value={query} onChange={setQuery} autoComplete="off" />
-        </Card.Section>
-      </Card>
-      <div className="mt-4 grid grid-cols-1 gap-3">
-        {filtered.map((c) => (
-          <Card key={c.id}>
-            <Card.Section>
-              <Text as="h3" variant="headingMd">{c.name || c.phone || c.email}</Text>
-              <Text as="p" variant="bodySm" tone="subdued">{c.phone} {c.email ? `• ${c.email}` : ""}</Text>
-            </Card.Section>
+    <div className="min-h-screen bg-background">
+      {/* iOS 18 Glass Header */}
+      <header className="glass-surface border-b border-border sticky top-0 z-10">
+        <div className="px-6 py-4">
+          <h1 className="text-h1 text-deep">Contacts</h1>
+          <p className="text-caption text-muted mt-1">Manage your contact list</p>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="p-6">
+        {/* Search Filter */}
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div>
+              <Label htmlFor="search">Search Contacts</Label>
+              <Input
+                id="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search by name, phone, or email"
+                className="mt-1"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Contacts Grid */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((contact) => (
+            <Card key={contact.id} className="hover:shadow-elevated transition-shadow duration-200">
+              <CardHeader>
+                <CardTitle className="text-deep">{contact.name || contact.phone || contact.email}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {contact.phone && (
+                    <p className="text-body text-muted">📞 {contact.phone}</p>
+                  )}
+                  {contact.email && (
+                    <p className="text-body text-muted">✉️ {contact.email}</p>
+                  )}
+                  <div className="flex gap-2 pt-2">
+                    <button className="text-xs text-primary hover:text-primary-hover">
+                      Edit
+                    </button>
+                    <button className="text-xs text-danger hover:text-danger-hover">
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Empty State */}
+        {filtered.length === 0 && (
+          <Card className="text-center py-12">
+            <CardContent>
+              <div className="text-neutral text-4xl mb-4">📱</div>
+              <h3 className="text-h3 text-deep mb-2">No contacts found</h3>
+              <p className="text-body text-muted">
+                {query ? "Try adjusting your search terms" : "Start by adding your first contact"}
+              </p>
+            </CardContent>
           </Card>
-        ))}
-      </div>
-    </Page>
+        )}
+      </main>
+    </div>
   );
 }
-
-

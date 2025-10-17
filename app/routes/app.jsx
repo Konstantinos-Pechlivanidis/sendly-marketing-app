@@ -1,8 +1,6 @@
 import { Outlet, useLoaderData, useRouteError, Link as RouterLink } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider } from "@shopify/shopify-app-react-router/react";
-import { AppProvider as PolarisAppProvider } from "@shopify/polaris";
-import polarisEnTranslations from "@shopify/polaris/locales/en.json";
 import { authenticate } from "../shopify.server";
 
 export const loader = async ({ request }) => {
@@ -17,16 +15,18 @@ export default function App() {
 
   return (
     <AppProvider embedded apiKey={apiKey}>
-      <PolarisAppProvider i18n={polarisEnTranslations} linkComponent={PolarisLink}>
+      <div className="min-h-screen bg-background">
         <s-app-nav>
           <s-link href="/app/dashboard">Dashboard</s-link>
           <s-link href="/app/campaigns">Campaigns</s-link>
           <s-link href="/app/contacts">Contacts</s-link>
           <s-link href="/app/settings">Settings</s-link>
-          <s-link href="/app/additional">Additional page</s-link>
+          <s-link href="/app/templates">Templates</s-link>
+          <s-link href="/app/automations">Automations</s-link>
+          <s-link href="/app/reports">Reports</s-link>
         </s-app-nav>
         <Outlet />
-      </PolarisAppProvider>
+      </div>
     </AppProvider>
   );
 }
@@ -40,19 +40,4 @@ export const headers = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
 
-// Polaris link adapter for React Router
-function PolarisLink({ children, url = "", external, ...rest }) {
-  const IS_EXTERNAL_LINK_REGEX = /^(?:[a-z][a-z\d+.-]*:|\/\/)/;
-  if (external || IS_EXTERNAL_LINK_REGEX.test(url)) {
-    return (
-      <a href={url} target="_blank" rel="noopener noreferrer" {...rest}>
-        {children}
-      </a>
-    );
-  }
-  return (
-    <RouterLink to={url} {...rest}>
-      {children}
-    </RouterLink>
-  );
-}
+// keep RouterLink import for compatibility with Shopify boundary
