@@ -16,6 +16,12 @@ export default function DashboardPage() {
   const smsMetrics = overview.sms || overview.smsMetrics || {};
   const contactMetrics = overview.contacts || overview.contactMetrics || {};
   const walletBalance = overview.wallet || overview.walletBalance || {};
+  
+  console.log("📊 Extracted metrics:", {
+    smsMetrics,
+    contactMetrics, 
+    walletBalance
+  });
 
   // Prevent hydration errors by ensuring client-side only rendering for dates
   useEffect(() => {
