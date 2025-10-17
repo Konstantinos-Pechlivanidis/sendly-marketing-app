@@ -2,7 +2,9 @@ import { useLoaderData } from "react-router";
 import { useState, useEffect } from "react";
 
 export default function DashboardPage() {
+  console.log("🎨 DASHBOARD COMPONENT RENDERING!");
   const data = useLoaderData();
+  console.log("📊 Dashboard data received:", data);
   const [mounted, setMounted] = useState(false);
   
   const overview = data?.overview?.data || {};
