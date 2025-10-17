@@ -1,43 +1,42 @@
-import { defineConfig } from '@tailwindcss/postcss';
-
-export default defineConfig({
+/** @type {import('tailwindcss').Config} */
+export default {
   content: [
     "./app/**/*.{js,jsx,ts,tsx}",
   ],
   theme: {
     extend: {
       colors: {
-        primary: "var(--color-primary)",
-        secondary: "var(--color-secondary)",
-        deep: "var(--color-deep)",
-        neutral: "var(--color-neutral)",
-        accent: "var(--color-accent)",
-        danger: "var(--color-danger)",
-        surface: "var(--surface)",
-        background: "var(--background)",
-        border: "var(--border)",
-        muted: "var(--muted)",
-        ring: "var(--ring)",
+        primary: "#64D3C1",
+        secondary: "#1C7B7B",
+        deep: "#004E47",
+        neutral: "#D9B88C",
+        accent: "#E27D43",
+        danger: "#8A3E2E",
+        surface: "#FFFFFF",
+        background: "#F8F8F8",
+        border: "rgba(0, 0, 0, 0.1)",
+        muted: "rgba(0, 0, 0, 0.05)",
+        ring: "#64D3C1",
       },
       borderRadius: {
-        sm: "var(--radius-sm)",
-        md: "var(--radius-md)",
-        lg: "var(--radius-lg)",
-        xl: "var(--radius-xl)",
-        "2xl": "var(--radius-2xl)",
+        sm: "10px",
+        md: "14px",
+        lg: "18px",
+        xl: "24px",
+        "2xl": "28px",
       },
       spacing: {
-        "4pt": "var(--space-4pt)",
-        "8pt": "var(--space-8pt)",
-        "12pt": "var(--space-12pt)",
-        "16pt": "var(--space-16pt)",
-        "20pt": "var(--space-20pt)",
-        "24pt": "var(--space-24pt)",
-        "32pt": "var(--space-32pt)",
+        "4pt": "4px",
+        "8pt": "8px",
+        "12pt": "12px",
+        "16pt": "16px",
+        "20pt": "20px",
+        "24pt": "24px",
+        "32pt": "32px",
       },
       boxShadow: {
-        subtle: "var(--shadow-subtle)",
-        elevated: "var(--shadow-elevated)",
+        subtle: "0 1px 3px rgba(0,0,0,0.08)",
+        elevated: "0 4px 12px rgba(0,0,0,0.12)",
       },
       transitionProperty: {
         'colors-opacity-transform': 'background-color, border-color, color, fill, stroke, opacity, transform',
@@ -57,6 +56,6 @@ export default defineConfig({
     },
   },
   plugins: [],
-});
+};
 
 
