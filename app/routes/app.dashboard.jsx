@@ -10,9 +10,9 @@ export const loader = async ({ request }) => {
     const { session } = await authenticate.admin(request);
     console.log("📋 Session Details:", {
       shop: session?.shop,
-      id: session?.id,
+      sessionId: session?.id,
       hasAccessToken: !!session?.accessToken,
-      tokenPreview: session?.accessToken?.substring(0, 30) + "...",
+      accessTokenPreview: session?.accessToken?.substring(0, 30) + "...",
       isOnline: session?.isOnline,
       scope: session?.scope,
     });
