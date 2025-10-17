@@ -2,7 +2,7 @@
 
 client_id = "06cf323c65f80065e12be43136249482"
 name = "sendly-marketing-app"
-application_url = "https://example.com"
+application_url = "http://localhost:3000"
 embedded = true
 
 [build]
@@ -25,4 +25,4 @@ api_version = "2026-01"
 scopes = "write_products"
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [ "http://localhost:3000/auth/callback" ]
