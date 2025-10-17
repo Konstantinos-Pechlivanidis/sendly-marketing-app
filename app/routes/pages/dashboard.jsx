@@ -7,43 +7,43 @@ export default function DashboardPage() {
   console.log("Dashboard data:", data);
   
   return (
-    <div className="min-h-screen bg-red-100">
+    <div style={{ minHeight: '100vh', backgroundColor: 'red' }}>
       {/* Header */}
-      <header className="bg-blue-500 border-b-4 border-yellow-500 sticky top-0 z-10">
-        <div className="px-6 py-4">
-          <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-          <p className="text-sm text-yellow-200 mt-1">Overview of your SMS marketing performance</p>
+      <header style={{ backgroundColor: 'blue', borderBottom: '4px solid yellow', position: 'sticky', top: 0, zIndex: 10 }}>
+        <div style={{ padding: '16px 24px' }}>
+          <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: 'white' }}>Dashboard</h1>
+          <p style={{ fontSize: '0.875rem', color: 'yellow', marginTop: '4px' }}>Overview of your SMS marketing performance</p>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="p-6">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <main style={{ padding: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
           {/* Overview Card */}
-          <div className="bg-green-500 rounded-lg shadow-lg border-2 border-purple-500 p-6 hover:bg-green-600 transition-colors">
-            <h2 className="text-lg font-semibold text-white mb-4">Overview</h2>
-            <div className="bg-yellow-200 rounded-lg p-3">
-              <pre className="text-xs text-black overflow-auto">
+          <div style={{ backgroundColor: 'green', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', border: '2px solid purple', padding: '24px' }}>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'white', marginBottom: '16px' }}>Overview</h2>
+            <div style={{ backgroundColor: 'yellow', borderRadius: '8px', padding: '12px' }}>
+              <pre style={{ fontSize: '0.75rem', color: 'black', overflow: 'auto' }}>
                 {JSON.stringify(data?.overview?.data || { message: "No data available" }, null, 2)}
               </pre>
             </div>
           </div>
 
           {/* Quick Stats Card */}
-          <div className="bg-green-500 rounded-lg shadow-lg border-2 border-purple-500 p-6 hover:bg-green-600 transition-colors">
-            <h2 className="text-lg font-semibold text-white mb-4">Quick Stats</h2>
-            <div className="bg-yellow-200 rounded-lg p-3">
-              <pre className="text-xs text-black overflow-auto">
+          <div style={{ backgroundColor: 'green', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', border: '2px solid purple', padding: '24px' }}>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'white', marginBottom: '16px' }}>Quick Stats</h2>
+            <div style={{ backgroundColor: 'yellow', borderRadius: '8px', padding: '12px' }}>
+              <pre style={{ fontSize: '0.75rem', color: 'black', overflow: 'auto' }}>
                 {JSON.stringify(data?.quickStats?.data || { message: "No data available" }, null, 2)}
               </pre>
             </div>
           </div>
 
           {/* System Health Card */}
-          <div className="bg-green-500 rounded-lg shadow-lg border-2 border-purple-500 p-6 hover:bg-green-600 transition-colors">
-            <h2 className="text-lg font-semibold text-white mb-4">System Health</h2>
-            <div className="bg-yellow-200 rounded-lg p-3">
-              <pre className="text-xs text-black overflow-auto">
+          <div style={{ backgroundColor: 'green', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', border: '2px solid purple', padding: '24px' }}>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'white', marginBottom: '16px' }}>System Health</h2>
+            <div style={{ backgroundColor: 'yellow', borderRadius: '8px', padding: '12px' }}>
+              <pre style={{ fontSize: '0.75rem', color: 'black', overflow: 'auto' }}>
                 {JSON.stringify(data?.health || { message: "No data available" }, null, 2)}
               </pre>
             </div>
