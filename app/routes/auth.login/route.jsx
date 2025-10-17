@@ -1,47 +1,30 @@
-import { AppProvider } from "@shopify/shopify-app-react-router/react";
-import { useState } from "react";
-import { Form, useActionData, useLoaderData } from "react-router";
+import { redirect } from "react-router";
 import { login } from "../../shopify.server";
-import { loginErrorMessage } from "./error.server";
 
 export const loader = async ({ request }) => {
-  const errors = loginErrorMessage(await login(request));
-
-  return { errors };
+  const url = new URL(request.url);
+  if (url.searchParams.get("shop")) {
+    // If a shop is present, it means Shopify is trying to authenticate.
+    // We should proceed with the login flow without showing a form.
+    await login(request);
+    throw redirect(`/app?${url.searchParams.toString()}`);
+  }
+  // If no shop is present, it might be a direct access or an unauthenticated state.
+  // We can let the default Shopify auth flow handle it, which will redirect to /auth.
+  // Or, if login is configured to show a form, we can show it.
+  // For embedded apps, typically we don't show a login form.
+  // This path should ideally not be hit if the app is always embedded.
+  throw redirect("/auth"); // Redirect to the main auth flow
 };
 
 export const action = async ({ request }) => {
-  const errors = loginErrorMessage(await login(request));
-
-  return {
-    errors,
-  };
+  // This action should ideally not be hit if the login form is removed.
+  // If it is, it means a direct POST to /auth/login happened.
+  await login(request);
+  return null;
 };
 
-export default function Auth() {
-  const loaderData = useLoaderData();
-  const actionData = useActionData();
-  const [shop, setShop] = useState("");
-  const { errors } = actionData || loaderData;
-
-  return (
-    <AppProvider embedded={false}>
-      <s-page>
-        <Form method="post">
-          <s-section heading="Log in">
-            <s-text-field
-              name="shop"
-              label="Shop domain"
-              details="example.myshopify.com"
-              value={shop}
-              onChange={(e) => setShop(e.currentTarget.value)}
-              autocomplete="on"
-              error={errors.shop}
-            ></s-text-field>
-            <s-button type="submit">Log in</s-button>
-          </s-section>
-        </Form>
-      </s-page>
-    </AppProvider>
-  );
+export default function AuthLoginRoute() {
+  // This component should not render anything as the loader/action handles redirects.
+  return null;
 }
