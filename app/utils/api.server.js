@@ -21,19 +21,19 @@ async function makeRequest(shopify, path, options = {}) {
     shop: shopify?.session?.shop,
   });
   
-  // Use session ID (what backend expects)
-  const sessionToken = shopify?.session?.id;
+  // Use access token (what backend expects)
+  const accessToken = shopify?.session?.accessToken;
   
-  if (sessionToken) {
-    headers["Authorization"] = `Bearer ${sessionToken}`;
-    console.log(`✅ Added Authorization header with SESSION ID`);
-    console.log(`🔑 Session ID: ${sessionToken}`);
+  if (accessToken) {
+    headers["Authorization"] = `Bearer ${accessToken}`;
+    console.log(`✅ Added Authorization header with ACCESS TOKEN`);
+    console.log(`🔑 Access Token: ${accessToken.substring(0, 30)}...`);
   } else {
-    console.error("❌ No session ID found! Falling back to access token...");
-    const accessToken = shopify?.session?.accessToken;
-    if (accessToken) {
-      headers["Authorization"] = `Bearer ${accessToken}`;
-      console.log(`⚠️ Using ACCESS TOKEN instead: ${accessToken.substring(0, 30)}...`);
+    console.error("❌ No access token found! Falling back to session ID...");
+    const sessionId = shopify?.session?.id;
+    if (sessionId) {
+      headers["Authorization"] = `Bearer ${sessionId}`;
+      console.log(`⚠️ Using SESSION ID instead: ${sessionId}`);
     } else {
       console.error("❌ No tokens found!");
     }
