@@ -1,6 +1,6 @@
 import { authenticate } from "../shopify.server";
 
-const BASE_URL = "https://sendly-marketing-backend.onrender.com/api";
+const BASE_URL = "https://sendly-marketing-backend.onrender.com";
 const DEFAULT_HEADERS = { "Content-Type": "application/json" };
 
 async function makeRequest(shopify, path, options = {}) {
