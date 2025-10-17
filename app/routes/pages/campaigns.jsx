@@ -1,5 +1,5 @@
 import { useLoaderData, useFetcher } from "react-router";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "../../components/ui/Button";
 import { Input, Label, Textarea } from "../../components/ui/Input";
 
@@ -10,10 +10,24 @@ export default function CampaignsPage() {
   const toggle = useCallback(() => setOpen((o) => !o), []);
   const [name, setName] = useState("");
   const [content, setContent] = useState("");
+  const [mounted, setMounted] = useState(false);
 
   // Adapt to backend response structure
   const campaigns = data?.campaigns?.data?.campaigns || data?.campaigns?.items || [];
   const stats = data?.stats?.data || data?.stats || {};
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const formatDate = (dateString) => {
+    if (!mounted) return "Loading...";
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch {
+      return "N/A";
+    }
+  };
 
   const create = () => {
     fetcher.submit({ _action: "createCampaign", name, content }, { method: "post" });
@@ -88,7 +102,7 @@ export default function CampaignsPage() {
                       </span>
                     </div>
                     <p className="text-caption">
-                      Created {new Date(campaign.createdAt || Date.now()).toLocaleDateString()}
+                      Created {formatDate(campaign.createdAt)}
                     </p>
                   </div>
                   <div className="text-right">

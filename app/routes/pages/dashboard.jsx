@@ -1,7 +1,9 @@
 import { useLoaderData } from "react-router";
+import { useState, useEffect } from "react";
 
 export default function DashboardPage() {
   const data = useLoaderData();
+  const [mounted, setMounted] = useState(false);
   
   const overview = data?.overview?.data || {};
   const quickStats = data?.quickStats?.data || {};
@@ -12,6 +14,21 @@ export default function DashboardPage() {
   const smsMetrics = overview.sms || overview.smsMetrics || {};
   const contactMetrics = overview.contacts || overview.contactMetrics || {};
   const walletBalance = overview.wallet || overview.walletBalance || {};
+
+  // Prevent hydration errors by ensuring client-side only rendering for dates
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Helper to format dates safely
+  const formatDate = (dateString) => {
+    if (!mounted) return "Loading...";
+    try {
+      return new Date(dateString).toLocaleString();
+    } catch {
+      return "N/A";
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -109,7 +126,7 @@ export default function DashboardPage() {
                       <span className="text-xl">📨</span>
                       <div className="flex-1">
                         <p className="text-body font-medium">SMS Sent</p>
-                        <p className="text-caption">{msg.to || 'Contact'} • {new Date(msg.timestamp || Date.now()).toLocaleString()}</p>
+                        <p className="text-caption">{msg.to || 'Contact'} • {formatDate(msg.timestamp)}</p>
                       </div>
                     </div>
                   ))}
@@ -118,7 +135,7 @@ export default function DashboardPage() {
                       <span className="text-xl">💳</span>
                       <div className="flex-1">
                         <p className="text-body font-medium">{tx.type || 'Transaction'}</p>
-                        <p className="text-caption">{tx.amount || 0} credits • {new Date(tx.timestamp || Date.now()).toLocaleString()}</p>
+                        <p className="text-caption">{tx.amount || 0} credits • {formatDate(tx.timestamp)}</p>
                       </div>
                     </div>
                   ))}
@@ -229,7 +246,7 @@ export default function DashboardPage() {
                 <div className="p-4 bg-surface rounded-lg border border-border">
                   <p className="text-caption text-gray-600 mb-2">Timestamp</p>
                   <p className="text-sm font-mono text-deep">
-                    {debug.timestamp ? new Date(debug.timestamp).toLocaleString() : "N/A"}
+                    {debug.timestamp ? formatDate(debug.timestamp) : "N/A"}
                   </p>
                 </div>
               </div>
