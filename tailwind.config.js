@@ -1,5 +1,6 @@
-/** @type {import('tailwindcss').Config} */
-export default {
+import { defineConfig } from '@tailwindcss/postcss';
+
+export default defineConfig({
   content: [
     "./app/**/*.{js,jsx,ts,tsx}",
   ],
@@ -56,6 +57,6 @@ export default {
     },
   },
   plugins: [],
-};
+});
 
 
