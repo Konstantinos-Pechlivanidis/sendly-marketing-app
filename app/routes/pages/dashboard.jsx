@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Ca
 export default function DashboardPage() {
   const data = useLoaderData();
   
+  console.log("Dashboard data:", data);
+  
   return (
     <div className="min-h-screen bg-background">
       {/* iOS 18 Glass Header */}
@@ -26,7 +28,7 @@ export default function DashboardPage() {
               <div className="space-y-3">
                 <div className="bg-muted rounded-lg p-3">
                   <pre className="text-xs text-muted overflow-auto">
-                    {JSON.stringify(data?.overview?.data || {}, null, 2)}
+                    {JSON.stringify(data?.overview?.data || { message: "No data available" }, null, 2)}
                   </pre>
                 </div>
               </div>
@@ -42,7 +44,7 @@ export default function DashboardPage() {
               <div className="space-y-3">
                 <div className="bg-muted rounded-lg p-3">
                   <pre className="text-xs text-muted overflow-auto">
-                    {JSON.stringify(data?.quickStats?.data || {}, null, 2)}
+                    {JSON.stringify(data?.quickStats?.data || { message: "No data available" }, null, 2)}
                   </pre>
                 </div>
               </div>
@@ -58,7 +60,7 @@ export default function DashboardPage() {
               <div className="space-y-3">
                 <div className="bg-muted rounded-lg p-3">
                   <pre className="text-xs text-muted overflow-auto">
-                    {JSON.stringify(data?.health || {}, null, 2)}
+                    {JSON.stringify(data?.health || { message: "No data available" }, null, 2)}
                   </pre>
                 </div>
               </div>
