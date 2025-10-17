@@ -8,17 +8,47 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: "#64D3C1",
-        secondary: "#1C7B7B",
-        deep: "#004E47",
-        neutral: "#D9B88C",
-        accent: "#E27D43",
-        danger: "#8A3E2E",
-        surface: "#FFFFFF",
-        background: "#F8F8F8",
-        border: "rgba(0, 0, 0, 0.1)",
-        muted: "rgba(0, 0, 0, 0.05)",
-        ring: "#64D3C1",
+        primary: {
+          DEFAULT: "var(--color-primary)",
+          hover: "var(--primary-hover)",
+          active: "var(--primary-active)",
+          disabled: "var(--primary-disabled)",
+        },
+        secondary: {
+          DEFAULT: "var(--color-secondary)",
+          hover: "var(--secondary-hover)",
+          active: "var(--secondary-active)",
+          disabled: "var(--secondary-disabled)",
+        },
+        deep: {
+          DEFAULT: "var(--color-deep)",
+          hover: "var(--deep-hover)",
+          active: "var(--deep-active)",
+          disabled: "var(--deep-disabled)",
+        },
+        neutral: {
+          DEFAULT: "var(--color-neutral)",
+          hover: "var(--neutral-hover)",
+          active: "var(--neutral-active)",
+          disabled: "var(--neutral-disabled)",
+        },
+        accent: {
+          DEFAULT: "var(--color-accent)",
+          hover: "var(--accent-hover)",
+          active: "var(--accent-active)",
+          disabled: "var(--accent-disabled)",
+        },
+        danger: {
+          DEFAULT: "var(--color-danger)",
+          hover: "var(--danger-hover)",
+          active: "var(--danger-active)",
+          disabled: "var(--danger-disabled)",
+        },
+        surface: "var(--surface)",
+        background: "var(--background)",
+        border: "var(--border)",
+        muted: "var(--muted)",
+        ring: "var(--ring)",
       },
       borderRadius: {
         sm: "10px",
