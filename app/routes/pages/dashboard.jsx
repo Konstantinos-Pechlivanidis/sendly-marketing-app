@@ -5,8 +5,6 @@ import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/Ca
 import { Badge } from "../../components/ui/Badge";
 import { Alert } from "../../components/ui/Alert";
 import { LoadingSpinner } from "../../components/ui/LoadingSpinner";
-import { Stat } from "../../components/ui/Stat";
-import { Section, SectionHeader, SectionContent } from "../../components/ui/Section";
 import { PageLayout, PageHeader, PageContent, PageSection } from "../../components/ui/PageLayout";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbSeparator } from "../../components/ui/Breadcrumb";
 import { ActionButton, ActionGroup } from "../../components/ui/ActionButton";
