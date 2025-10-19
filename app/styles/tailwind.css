@@ -139,11 +139,11 @@
 
   /* iOS 18 Card Components */
   .card {
-    @apply bg-white rounded-2xl border border-white/20 shadow-card transition-all duration-200 hover:shadow-elevated;
+    @apply bg-white rounded-2xl border border-white/20 shadow-md transition-all duration-200 hover:shadow-lg;
   }
 
   .card-interactive {
-    @apply card cursor-pointer hover:-translate-y-1 hover:shadow-elevated;
+    @apply card cursor-pointer hover:-translate-y-1 hover:shadow-lg;
   }
 
   /* iOS 18 Input Components */

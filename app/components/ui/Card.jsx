@@ -9,9 +9,9 @@ const Card = forwardRef(({
   ...props 
 }, ref) => {
   const variants = {
-    default: "bg-white border border-white/20 shadow-card",
-    elevated: "bg-white border border-white/20 shadow-elevated",
-    glass: "glass-surface border border-white/20 shadow-glass",
+    default: "bg-white border border-white/20 shadow-md",
+    elevated: "bg-white border border-white/20 shadow-lg",
+    glass: "glass-surface border border-white/20 shadow-xl",
     outline: "bg-transparent border border-gray-300 shadow-none",
   };
 
@@ -21,7 +21,7 @@ const Card = forwardRef(({
       className={cn(
         "rounded-2xl transition-all duration-200",
         variants[variant],
-        interactive && "cursor-pointer hover:-translate-y-1 hover:shadow-elevated",
+        interactive && "cursor-pointer hover:-translate-y-1 hover:shadow-lg",
         translucent && "glass-surface",
         className
       )}
