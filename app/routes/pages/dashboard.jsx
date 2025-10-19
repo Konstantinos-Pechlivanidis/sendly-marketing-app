@@ -1,4 +1,4 @@
-import { useLoaderData, useFetcher } from "react-router";
+import { useLoaderData } from "react-router";
 import { useState, useEffect } from "react";
 import { Button } from "../../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/Card";
