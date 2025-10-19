@@ -1,4 +1,4 @@
-import { useLoaderData } from "react-router";
+import { useLoaderData, useFetcher } from "react-router";
 import { useState, useEffect } from "react";
 import { Input, Label } from "../../components/ui/Input";
 import { Textarea } from "../../components/ui/Textarea";
@@ -17,6 +17,7 @@ import { api } from "../../utils/api.client";
 
 export default function TemplatesPage() {
   const data = useLoaderData();
+  const fetcher = useFetcher();
   const [alert, setAlert] = useState(null);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);

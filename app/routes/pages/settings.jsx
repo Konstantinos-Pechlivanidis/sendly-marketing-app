@@ -1,4 +1,4 @@
-import { useLoaderData } from "react-router";
+import { useLoaderData, useFetcher } from "react-router";
 import { useState, useEffect } from "react";
 import { Button } from "../../components/ui/Button";
 import { Input, Label } from "../../components/ui/Input";
@@ -16,6 +16,7 @@ import { ActionButton, ActionGroup } from "../../components/ui/ActionButton";
 
 export default function SettingsPage() {
   const data = useLoaderData();
+  const fetcher = useFetcher();
   
   const balance = data?.balance || {};
   const transactions = data?.transactions?.items || [];

@@ -1,4 +1,4 @@
-import { useLoaderData } from "react-router";
+import { useLoaderData, useFetcher } from "react-router";
 import { useState, useEffect } from "react";
 import { Button } from "../../components/ui/Button";
 import { Input, Label } from "../../components/ui/Input";
@@ -16,6 +16,7 @@ import { ActionButton, ActionGroup } from "../../components/ui/ActionButton";
 
 export default function AutomationsPage() {
   const data = useLoaderData();
+  const fetcher = useFetcher();
   
   const automations = data?.automations?.items || [];
   const stats = data?.stats || {};

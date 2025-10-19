@@ -1,4 +1,4 @@
-import { useLoaderData } from "react-router";
+import { useLoaderData, useFetcher } from "react-router";
 import { useState, useEffect } from "react";
 import { Button } from "../../components/ui/Button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/Tabs";
@@ -15,6 +15,7 @@ import { ActionButton, ActionGroup } from "../../components/ui/ActionButton";
 
 export default function ReportsPage() {
   const data = useLoaderData();
+  const fetcher = useFetcher();
   
   const overview = data?.overview?.data || {};
   const campaigns = data?.campaigns?.data || {};
