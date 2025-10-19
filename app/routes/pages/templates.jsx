@@ -550,8 +550,7 @@ export default function TemplatesPage() {
               </ul>
             </div>
           </div>
-        </Card>
-      </main>
+          </Card>
 
       {/* Preview Modal */}
       <Modal

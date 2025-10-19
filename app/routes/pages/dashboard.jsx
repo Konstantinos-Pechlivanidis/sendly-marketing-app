@@ -345,6 +345,7 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
+      </div>
 
       {/* Campaign Performance */}
       {quickStats.campaigns && (

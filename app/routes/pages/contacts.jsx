@@ -569,7 +569,6 @@ export default function ContactsPage() {
             </div>
           </div>
         )}
-      </main>
 
       {/* Create/Edit Modal */}
       <Modal

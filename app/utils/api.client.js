@@ -632,6 +632,7 @@ export default api;
 
 // Named exports for specific use cases
 export { 
+  api,
   getShopDomain, 
   getSessionToken, 
   buildHeaders, 

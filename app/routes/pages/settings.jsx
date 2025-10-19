@@ -497,7 +497,6 @@ export default function SettingsPage() {
             </div>
           </TabsContent>
         </Tabs>
-      </main>
 
       {/* Payment Modal */}
       <Modal
