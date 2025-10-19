@@ -126,20 +126,20 @@
   }
 
   .btn-secondary {
-    @apply bg-surface border border-ink-tertiary text-ink rounded-xl px-6 py-3 font-medium transition-all duration-200 hover:bg-surface-secondary hover:border-ink-secondary active:scale-98 focus:ring-2 focus:ring-brand/50 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-white border border-gray-300 text-gray-900 rounded-xl px-6 py-3 font-medium transition-all duration-200 hover:bg-gray-50 hover:border-gray-400 active:scale-98 focus:ring-2 focus:ring-brand/50 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-ghost {
-    @apply text-ink-secondary hover:text-ink hover:bg-surface-secondary rounded-xl px-4 py-2 font-medium transition-all duration-200 active:scale-98 focus:ring-2 focus:ring-brand/50 focus:ring-offset-2;
+    @apply text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl px-4 py-2 font-medium transition-all duration-200 active:scale-98 focus:ring-2 focus:ring-brand/50 focus:ring-offset-2;
   }
 
   .btn-danger {
-    @apply bg-negative text-white rounded-xl px-6 py-3 font-medium transition-all duration-200 hover:bg-negative-hover active:scale-98 focus:ring-2 focus:ring-negative/50 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-red-600 text-white rounded-xl px-6 py-3 font-medium transition-all duration-200 hover:bg-red-700 active:scale-98 focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   /* iOS 18 Card Components */
   .card {
-    @apply bg-card rounded-2xl border border-white/20 shadow-card transition-all duration-200 hover:shadow-elevated;
+    @apply bg-white rounded-2xl border border-white/20 shadow-card transition-all duration-200 hover:shadow-elevated;
   }
 
   .card-interactive {
@@ -148,11 +148,11 @@
 
   /* iOS 18 Input Components */
   .input {
-    @apply w-full px-4 py-3 bg-surface border border-ink-tertiary rounded-xl text-ink placeholder-ink-tertiary transition-all duration-200 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 transition-all duration-200 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .input-error {
-    @apply input border-negative focus:border-negative focus:ring-negative/20;
+    @apply input border-red-500 focus:border-red-500 focus:ring-red-500/20;
   }
 
   /* iOS 18 Badge Components */

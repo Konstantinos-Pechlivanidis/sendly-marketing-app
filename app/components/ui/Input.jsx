@@ -9,16 +9,16 @@ const Input = forwardRef(({
   ...props 
 }, ref) => {
   const variants = {
-    default: "border-ink-tertiary focus:border-brand focus:ring-brand/20",
-    error: "border-negative focus:border-negative focus:ring-negative/20",
-    success: "border-positive focus:border-positive focus:ring-positive/20",
+    default: "border-gray-300 focus:border-brand focus:ring-brand/20",
+    error: "border-red-500 focus:border-red-500 focus:ring-red-500/20",
+    success: "border-green-500 focus:border-green-500 focus:ring-green-500/20",
   };
 
   return (
     <input
       type={type}
       className={cn(
-        "flex h-11 w-full rounded-xl border bg-surface px-4 py-3 text-sm text-ink placeholder:text-ink-tertiary transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 file:border-0 file:bg-transparent file:text-sm file:font-medium",
+        "flex h-11 w-full rounded-xl border bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 file:border-0 file:bg-transparent file:text-sm file:font-medium",
         variants[error ? "error" : "default"],
         className
       )}
@@ -35,13 +35,13 @@ const Label = forwardRef(({ className, required = false, ...props }, ref) => {
     <label
       ref={ref}
       className={cn(
-        "text-sm font-medium text-ink leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+        "text-sm font-medium text-gray-900 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
         className
       )}
       {...props}
     >
       {props.children}
-      {required && <span className="text-negative ml-1">*</span>}
+      {required && <span className="text-red-500 ml-1">*</span>}
     </label>
   );
 });
@@ -54,15 +54,15 @@ const Textarea = forwardRef(({
   ...props 
 }, ref) => {
   const variants = {
-    default: "border-ink-tertiary focus:border-brand focus:ring-brand/20",
-    error: "border-negative focus:border-negative focus:ring-negative/20",
-    success: "border-positive focus:border-positive focus:ring-positive/20",
+    default: "border-gray-300 focus:border-brand focus:ring-brand/20",
+    error: "border-red-500 focus:border-red-500 focus:ring-red-500/20",
+    success: "border-green-500 focus:border-green-500 focus:ring-green-500/20",
   };
 
   return (
     <textarea
       className={cn(
-        "flex min-h-[100px] w-full rounded-xl border bg-surface px-4 py-3 text-sm text-ink placeholder:text-ink-tertiary transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 resize-y",
+        "flex min-h-[100px] w-full rounded-xl border bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 resize-y",
         variants[error ? "error" : "default"],
         className
       )}
@@ -81,15 +81,15 @@ const Select = forwardRef(({
   ...props 
 }, ref) => {
   const variants = {
-    default: "border-ink-tertiary focus:border-brand focus:ring-brand/20",
-    error: "border-negative focus:border-negative focus:ring-negative/20",
-    success: "border-positive focus:border-positive focus:ring-positive/20",
+    default: "border-gray-300 focus:border-brand focus:ring-brand/20",
+    error: "border-red-500 focus:border-red-500 focus:ring-red-500/20",
+    success: "border-green-500 focus:border-green-500 focus:ring-green-500/20",
   };
 
   return (
     <select
       className={cn(
-        "flex h-11 w-full rounded-xl border bg-surface px-4 py-3 text-sm text-ink transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50",
+        "flex h-11 w-full rounded-xl border bg-white px-4 py-3 text-sm text-gray-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50",
         variants[error ? "error" : "default"],
         className
       )}

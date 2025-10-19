@@ -102,7 +102,7 @@ export default function DashboardPage() {
               {/* Debug Info Badge */}
               {debug.sessionId && (
                 <div className="px-4 py-2 bg-brand/10 rounded-xl border border-brand/20">
-                  <p className="text-xs text-ink font-mono">
+                  <p className="text-xs text-gray-900 font-mono">
                     🔑 Session: {debug.sessionId.substring(0, 8)}...
                   </p>
                   <p className="text-xs text-brand font-mono">{debug.shop}</p>
@@ -189,8 +189,8 @@ export default function DashboardPage() {
                         <div key={`msg-${idx}`} className="flex items-start gap-3 p-3 bg-muted rounded-xl hover:bg-brand/5 transition-colors">
                           <span className="text-xl">📨</span>
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-ink">SMS Sent</p>
-                            <p className="text-xs text-ink-secondary">{msg.to || 'Contact'} • {formatDate(msg.timestamp)}</p>
+                            <p className="text-sm font-medium text-gray-900">SMS Sent</p>
+                            <p className="text-xs text-gray-600">{msg.to || 'Contact'} • {formatDate(msg.timestamp)}</p>
                             {msg.status && (
                               <Badge variant={msg.status === 'delivered' ? 'positive' : 'warning'} size="sm" className="mt-1">
                                 {msg.status}
@@ -203,8 +203,8 @@ export default function DashboardPage() {
                         <div key={`tx-${idx}`} className="flex items-start gap-3 p-3 bg-muted rounded-xl hover:bg-brand/5 transition-colors">
                           <span className="text-xl">💳</span>
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-ink">{tx.type || 'Transaction'}</p>
-                            <p className="text-xs text-ink-secondary">{tx.amount || 0} credits • {formatDate(tx.timestamp)}</p>
+                            <p className="text-sm font-medium text-gray-900">{tx.type || 'Transaction'}</p>
+                            <p className="text-xs text-gray-600">{tx.amount || 0} credits • {formatDate(tx.timestamp)}</p>
                             {tx.status && (
                               <Badge variant={tx.status === 'completed' ? 'positive' : 'warning'} size="sm" className="mt-1">
                                 {tx.status}
@@ -217,8 +217,8 @@ export default function DashboardPage() {
                   ) : (
                     <div className="text-center py-8">
                       <span className="text-4xl mb-2">📭</span>
-                      <p className="text-sm text-ink-secondary">No recent activity</p>
-                      <p className="text-xs text-ink-tertiary mt-1">Start sending SMS campaigns to see activity here</p>
+                      <p className="text-sm text-gray-600">No recent activity</p>
+                      <p className="text-xs text-gray-500 mt-1">Start sending SMS campaigns to see activity here</p>
                       <Button variant="primary" size="sm" className="mt-4">
                         Create Campaign
                       </Button>
@@ -245,7 +245,7 @@ export default function DashboardPage() {
                       <div className="flex items-center justify-between p-3 bg-muted rounded-xl">
                         <div className="flex items-center gap-2">
                           <span className="text-xl">✅</span>
-                          <span className="text-sm text-ink">System Status</span>
+                          <span className="text-sm text-gray-900">System Status</span>
                         </div>
                         <Badge variant="positive" size="sm">Operational</Badge>
                       </div>
@@ -254,7 +254,7 @@ export default function DashboardPage() {
                         <div key={key} className="flex items-center justify-between p-3 bg-muted rounded-xl">
                           <div className="flex items-center gap-2">
                             <span className="text-xl">{value.status === 'healthy' ? '✅' : '⚠️'}</span>
-                            <span className="text-sm text-ink capitalize">{key}</span>
+                            <span className="text-sm text-gray-900 capitalize">{key}</span>
                           </div>
                           <Badge variant={value.status === 'healthy' ? 'positive' : 'warning'} size="sm">
                             {value.status || 'unknown'}
@@ -264,7 +264,7 @@ export default function DashboardPage() {
                       
                       {health.uptime && (
                         <div className="mt-4 p-3 bg-brand/10 rounded-xl">
-                          <p className="text-xs text-ink">
+                          <p className="text-xs text-gray-900">
                             Uptime: {Math.floor(health.uptime / 3600)}h {Math.floor((health.uptime % 3600) / 60)}m
                           </p>
                         </div>
@@ -273,7 +273,7 @@ export default function DashboardPage() {
                   ) : (
                     <div className="text-center py-8">
                       <span className="text-4xl">⚠️</span>
-                      <p className="text-sm text-ink mt-2">System health check unavailable</p>
+                      <p className="text-sm text-gray-900 mt-2">System health check unavailable</p>
                       <Button variant="outline" size="sm" className="mt-4" onClick={handleRefresh}>
                         Retry Check
                       </Button>
@@ -303,30 +303,30 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   <div className="p-4 bg-muted rounded-xl hover:bg-brand/5 transition-colors">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs text-ink-secondary">Active Campaigns</p>
+                      <p className="text-xs text-gray-600">Active Campaigns</p>
                       <Badge variant="primary" size="sm">Live</Badge>
                     </div>
-                    <p className="text-2xl font-bold text-ink">{quickStats.campaigns.active || 0}</p>
+                    <p className="text-2xl font-bold text-gray-900">{quickStats.campaigns.active || 0}</p>
                     <p className="text-xs text-brand mt-1">
                       {quickStats.campaigns.active > 0 ? "Running now" : "No active campaigns"}
                     </p>
                   </div>
                   <div className="p-4 bg-muted rounded-xl hover:bg-brand/5 transition-colors">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs text-ink-secondary">Scheduled</p>
+                      <p className="text-xs text-gray-600">Scheduled</p>
                       <Badge variant="info" size="sm">Pending</Badge>
                     </div>
-                    <p className="text-2xl font-bold text-ink">{quickStats.campaigns.scheduled || 0}</p>
+                    <p className="text-2xl font-bold text-gray-900">{quickStats.campaigns.scheduled || 0}</p>
                     <p className="text-xs text-secondary mt-1">
                       {quickStats.campaigns.scheduled > 0 ? "Waiting to send" : "No scheduled campaigns"}
                     </p>
                   </div>
                   <div className="p-4 bg-muted rounded-xl hover:bg-brand/5 transition-colors">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs text-ink-secondary">Completed</p>
+                      <p className="text-xs text-gray-600">Completed</p>
                       <Badge variant="positive" size="sm">Done</Badge>
                     </div>
-                    <p className="text-2xl font-bold text-ink">{quickStats.campaigns.completed || 0}</p>
+                    <p className="text-2xl font-bold text-gray-900">{quickStats.campaigns.completed || 0}</p>
                     <p className="text-xs text-positive mt-1">
                       {quickStats.campaigns.completed > 0 ? "Successfully sent" : "No completed campaigns"}
                     </p>
@@ -346,7 +346,7 @@ export default function DashboardPage() {
               <details>
                 <summary className="cursor-pointer p-4 hover:bg-deep/10 rounded-xl transition-colors duration-200">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-ink">
+                    <span className="text-sm font-semibold text-gray-900">
                       🔧 Debug Information (Click to expand)
                     </span>
                     <Badge variant="info" size="sm">Development</Badge>
@@ -354,42 +354,42 @@ export default function DashboardPage() {
                 </summary>
                 <div className="p-6 space-y-4 border-t border-deep/20">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="p-4 bg-surface rounded-xl border border-ink-tertiary">
-                      <p className="text-xs text-ink-secondary mb-2">Session ID</p>
-                      <p className="text-sm font-mono text-ink break-all select-all">
+                    <div className="p-4 bg-white rounded-xl border border-gray-300">
+                      <p className="text-xs text-gray-600 mb-2">Session ID</p>
+                      <p className="text-sm font-mono text-gray-900 break-all select-all">
                         {debug.sessionId || "N/A"}
                       </p>
                     </div>
-                    <div className="p-4 bg-surface rounded-xl border border-ink-tertiary">
-                      <p className="text-xs text-ink-secondary mb-2">Shop Domain</p>
+                    <div className="p-4 bg-white rounded-xl border border-gray-300">
+                      <p className="text-xs text-gray-600 mb-2">Shop Domain</p>
                       <p className="text-sm font-mono text-brand break-all select-all">
                         {debug.shop || "N/A"}
                       </p>
                     </div>
-                    <div className="p-4 bg-surface rounded-xl border border-ink-tertiary">
-                      <p className="text-xs text-ink-secondary mb-2">Access Token (Preview)</p>
+                    <div className="p-4 bg-white rounded-xl border border-gray-300">
+                      <p className="text-xs text-gray-600 mb-2">Access Token (Preview)</p>
                       <p className="text-sm font-mono text-secondary break-all select-all">
                         {debug.tokenPreview || "N/A"}
                       </p>
                     </div>
-                    <div className="p-4 bg-surface rounded-xl border border-ink-tertiary">
-                      <p className="text-xs text-ink-secondary mb-2">Timestamp</p>
-                      <p className="text-sm font-mono text-ink">
+                    <div className="p-4 bg-white rounded-xl border border-gray-300">
+                      <p className="text-xs text-gray-600 mb-2">Timestamp</p>
+                      <p className="text-sm font-mono text-gray-900">
                         {debug.timestamp ? formatDate(debug.timestamp) : "N/A"}
                       </p>
                     </div>
                   </div>
                   {debug.error && (
                     <div className="p-4 bg-negative/10 rounded-xl border border-negative/20">
-                      <p className="text-xs text-negative mb-2">⚠️ Error</p>
-                      <p className="text-sm font-mono text-negative break-all">
+                      <p className="text-xs text-red-500 mb-2">⚠️ Error</p>
+                      <p className="text-sm font-mono text-red-500 break-all">
                         {debug.error}
                       </p>
                     </div>
                   )}
                   <div className="p-4 bg-neutral/10 rounded-xl border border-neutral/20">
-                    <p className="text-xs text-ink mb-2">💡 Tip</p>
-                    <p className="text-sm text-ink-secondary">
+                    <p className="text-xs text-gray-900 mb-2">💡 Tip</p>
+                    <p className="text-sm text-gray-600">
                       Copy the Session ID or Access Token to use in API testing. Check the server console for detailed API logs.
                     </p>
                   </div>

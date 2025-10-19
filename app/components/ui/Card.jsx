@@ -9,10 +9,10 @@ const Card = forwardRef(({
   ...props 
 }, ref) => {
   const variants = {
-    default: "bg-card border border-white/20 shadow-card",
-    elevated: "bg-card border border-white/20 shadow-elevated",
+    default: "bg-white border border-white/20 shadow-card",
+    elevated: "bg-white border border-white/20 shadow-elevated",
     glass: "glass-surface border border-white/20 shadow-glass",
-    outline: "bg-transparent border border-ink-tertiary shadow-none",
+    outline: "bg-transparent border border-gray-300 shadow-none",
   };
 
   return (
@@ -48,7 +48,7 @@ const CardTitle = forwardRef(({ className, ...props }, ref) => {
   return (
     <h3
       ref={ref}
-      className={cn("text-h3 text-ink font-semibold leading-tight tracking-tight", className)}
+      className={cn("text-h3 text-gray-900 font-semibold leading-tight tracking-tight", className)}
       {...props}
     />
   );
@@ -60,7 +60,7 @@ const CardDescription = forwardRef(({ className, ...props }, ref) => {
   return (
     <p
       ref={ref}
-      className={cn("text-sm text-ink-secondary leading-normal", className)}
+      className={cn("text-sm text-gray-600 leading-normal", className)}
       {...props}
     />
   );
