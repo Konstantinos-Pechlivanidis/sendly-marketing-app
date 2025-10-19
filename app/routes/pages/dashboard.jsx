@@ -505,6 +505,7 @@ export default function DashboardPage() {
           </details>
         </Card>
       )}
+        </PageSection>
       </PageContent>
     </PageLayout>
   );
