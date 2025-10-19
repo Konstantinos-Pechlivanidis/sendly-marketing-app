@@ -488,7 +488,6 @@ export default function CampaignsPage() {
             </div>
           </div>
         )}
-      </main>
 
       {/* Create Campaign Modal */}
       <Modal
