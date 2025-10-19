@@ -7,6 +7,9 @@ import { Alert } from "../../components/ui/Alert";
 import { LoadingSpinner } from "../../components/ui/LoadingSpinner";
 import { Stat } from "../../components/ui/Stat";
 import { Section, SectionHeader, SectionContent } from "../../components/ui/Section";
+import { PageLayout, PageHeader, PageContent, PageSection } from "../../components/ui/PageLayout";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbSeparator } from "../../components/ui/Breadcrumb";
+import { ActionButton, ActionGroup } from "../../components/ui/ActionButton";
 import { api } from "../../utils/api.client";
 
 export default function DashboardPage() {
@@ -80,7 +83,7 @@ export default function DashboardPage() {
   }, [mounted]);
 
   return (
-    <div className="space-y-8">
+    <PageLayout>
       {/* Alert */}
       {alert && (
         <div className="fixed top-4 right-4 z-50 max-w-md">
@@ -92,34 +95,42 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Hero Header */}
-      <Section>
-        <SectionHeader
-          title="Dashboard"
-          description="Overview of your SMS marketing performance"
-          action={
-            <div className="flex items-center gap-3">
-              {/* Debug Info Badge */}
-              {debug.sessionId && (
-                <div className="px-4 py-2 bg-brand/10 rounded-xl border border-brand/20">
-                  <p className="text-xs text-gray-900 font-mono">
-                    🔑 Session: {debug.sessionId.substring(0, 8)}...
-                  </p>
-                  <p className="text-xs text-brand font-mono">{debug.shop}</p>
-                </div>
-              )}
-              <Button
-                variant="outline"
-                onClick={handleRefresh}
-                disabled={refreshing}
-                size="sm"
-              >
-                {refreshing ? <LoadingSpinner size="sm" /> : "🔄"} Refresh
-              </Button>
-            </div>
-          }
-        />
-      </Section>
+      {/* Page Header */}
+      <PageHeader
+        title="Dashboard"
+        subtitle="Overview of your SMS marketing performance"
+        actions={
+          <ActionGroup>
+            {/* Debug Info Badge */}
+            {debug.sessionId && (
+              <div className="px-4 py-2 bg-brand/10 rounded-xl border border-brand/20">
+                <p className="text-xs text-gray-900 font-mono">
+                  🔑 Session: {debug.sessionId.substring(0, 8)}...
+                </p>
+                <p className="text-xs text-brand font-mono">{debug.shop}</p>
+              </div>
+            )}
+            <ActionButton
+              variant="secondary"
+              onClick={handleRefresh}
+              disabled={refreshing}
+            >
+              {refreshing ? <LoadingSpinner size="sm" /> : "🔄"} Refresh
+            </ActionButton>
+          </ActionGroup>
+        }
+      >
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb>
+          <BreadcrumbItem href="/app">Sendly</BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem isLast>Dashboard</BreadcrumbItem>
+        </Breadcrumb>
+      </PageHeader>
+
+      {/* Page Content */}
+      <PageContent>
+        <PageSection>
 
       {/* KPI Stats Grid */}
       <Section>
@@ -399,6 +410,8 @@ export default function DashboardPage() {
           </SectionContent>
         </Section>
       )}
-    </div>
+        </PageSection>
+      </PageContent>
+    </PageLayout>
   );
 }
