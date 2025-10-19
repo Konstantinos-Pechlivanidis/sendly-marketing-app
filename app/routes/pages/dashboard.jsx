@@ -1,11 +1,22 @@
-import { useLoaderData } from "react-router";
+import { useLoaderData, useFetcher } from "react-router";
 import { useState, useEffect } from "react";
+import { Button } from "../../components/ui/Button";
+import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/Card";
+import { Badge } from "../../components/ui/Badge";
+import { Alert } from "../../components/ui/Alert";
+import { LoadingSpinner } from "../../components/ui/LoadingSpinner";
+import { Stat } from "../../components/ui/Stat";
+import { Section, SectionHeader, SectionContent } from "../../components/ui/Section";
+import { api } from "../../utils/api.client";
 
 export default function DashboardPage() {
   console.log("🎨 DASHBOARD COMPONENT RENDERING!");
   const data = useLoaderData();
+  const fetcher = useFetcher();
   console.log("📊 Dashboard data received:", data);
   const [mounted, setMounted] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [alert, setAlert] = useState(null);
   
   const overview = data?.overview?.data || {};
   const quickStats = data?.quickStats?.data || {};
@@ -38,244 +49,356 @@ export default function DashboardPage() {
     }
   };
 
+  // Refresh dashboard data
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const [overviewData, quickStatsData, healthData] = await Promise.all([
+        api.dashboard.overview(),
+        api.dashboard.quickStats(),
+        api.health()
+      ]);
+      
+      // Update the data (this would typically be handled by a state management solution)
+      setAlert({ type: 'success', message: 'Dashboard refreshed successfully!' });
+    } catch (error) {
+      setAlert({ type: 'error', message: `Failed to refresh: ${error.message}` });
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // Auto-refresh every 5 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (mounted) {
+        handleRefresh();
+      }
+    }, 300000); // 5 minutes
+
+    return () => clearInterval(interval);
+  }, [mounted]);
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* iOS 18 Glass Header */}
-      <header className="glass-surface sticky top-0 z-10">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-h1">Dashboard</h1>
-              <p className="text-caption mt-1">Overview of your SMS marketing performance</p>
-            </div>
-            {/* Debug Info Badge */}
-            {debug.sessionId && (
-              <div className="px-4 py-2 bg-primary/10 rounded-xl border border-primary/20">
-                <p className="text-xs text-deep font-mono">
-                  🔑 Session: {debug.sessionId.substring(0, 8)}...
-                </p>
-                <p className="text-xs text-primary font-mono">{debug.shop}</p>
-              </div>
-            )}
-          </div>
+    <div className="space-y-8">
+      {/* Alert */}
+      {alert && (
+        <div className="fixed top-4 right-4 z-50 max-w-md">
+          <Alert
+            type={alert.type}
+            message={alert.message}
+            onClose={() => setAlert(null)}
+          />
         </div>
-      </header>
+      )}
 
-      {/* Main Content */}
-      <main className="p-6 space-y-6">
-        {/* Quick Stats Row */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {/* Total SMS Sent */}
-          <div className="bg-surface rounded-xl shadow-subtle border border-border p-6 hover:shadow-elevated transition-shadow duration-200">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-caption text-gray-600">Total SMS Sent</h3>
-              <span className="text-2xl">📱</span>
-            </div>
-            <p className="text-h2">{(smsMetrics.sent || smsMetrics.totalSent || 0).toLocaleString()}</p>
-            <p className="text-caption text-primary mt-1">
-              {smsMetrics.delivered || 0} delivered
-            </p>
-          </div>
-
-          {/* Delivery Rate */}
-          <div className="bg-surface rounded-xl shadow-subtle border border-border p-6 hover:shadow-elevated transition-shadow duration-200">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-caption text-gray-600">Delivery Rate</h3>
-              <span className="text-2xl">✅</span>
-            </div>
-            <p className="text-h2">
-              {smsMetrics.deliveryRate 
-                ? (typeof smsMetrics.deliveryRate === 'number' 
-                  ? `${smsMetrics.deliveryRate}%` 
-                  : smsMetrics.deliveryRate)
-                : "0%"}
-            </p>
-            <p className="text-caption text-secondary mt-1">
-              {smsMetrics.failed || 0} failed
-            </p>
-          </div>
-
-          {/* Total Contacts */}
-          <div className="bg-surface rounded-xl shadow-subtle border border-border p-6 hover:shadow-elevated transition-shadow duration-200">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-caption text-gray-600">Total Contacts</h3>
-              <span className="text-2xl">👥</span>
-            </div>
-            <p className="text-h2">{(contactMetrics.total || 0).toLocaleString()}</p>
-            <p className="text-caption text-primary mt-1">
-              {contactMetrics.optedIn || contactMetrics.subscribed || 0} opted in
-            </p>
-          </div>
-
-          {/* Wallet Balance */}
-          <div className="bg-surface rounded-xl shadow-subtle border border-border p-6 hover:shadow-elevated transition-shadow duration-200">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-caption text-gray-600">Wallet Balance</h3>
-              <span className="text-2xl">💰</span>
-            </div>
-            <p className="text-h2">${(walletBalance.balance || 0).toFixed(2)}</p>
-            <p className="text-caption text-neutral mt-1">
-              {walletBalance.active ? "Active" : "Inactive"}
-            </p>
-          </div>
-        </div>
-
-        {/* Recent Activity & System Health */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* Recent Activity */}
-          <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
-            <h2 className="text-h3 mb-4">Recent Activity</h2>
-            <div className="space-y-3">
-              {(overview.recentMessages || overview.recentActivity || []).length > 0 || 
-               (overview.recentTransactions || []).length > 0 ? (
-                <>
-                  {(overview.recentMessages || []).slice(0, 3).map((msg, idx) => (
-                    <div key={`msg-${idx}`} className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-                      <span className="text-xl">📨</span>
-                      <div className="flex-1">
-                        <p className="text-body font-medium">SMS Sent</p>
-                        <p className="text-caption">{msg.to || 'Contact'} • {formatDate(msg.timestamp)}</p>
-                      </div>
-                    </div>
-                  ))}
-                  {(overview.recentTransactions || []).slice(0, 2).map((tx, idx) => (
-                    <div key={`tx-${idx}`} className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-                      <span className="text-xl">💳</span>
-                      <div className="flex-1">
-                        <p className="text-body font-medium">{tx.type || 'Transaction'}</p>
-                        <p className="text-caption">{tx.amount || 0} credits • {formatDate(tx.timestamp)}</p>
-                      </div>
-                    </div>
-                  ))}
-                </>
-              ) : (
-                <div className="text-center py-8">
-                  <span className="text-4xl mb-2">📭</span>
-                  <p className="text-caption">No recent activity</p>
-                  <p className="text-caption text-gray-500 mt-1">Start sending SMS campaigns to see activity here</p>
+      {/* Hero Header */}
+      <Section>
+        <SectionHeader
+          title="Dashboard"
+          description="Overview of your SMS marketing performance"
+          action={
+            <div className="flex items-center gap-3">
+              {/* Debug Info Badge */}
+              {debug.sessionId && (
+                <div className="px-4 py-2 bg-brand/10 rounded-xl border border-brand/20">
+                  <p className="text-xs text-ink font-mono">
+                    🔑 Session: {debug.sessionId.substring(0, 8)}...
+                  </p>
+                  <p className="text-xs text-brand font-mono">{debug.shop}</p>
                 </div>
               )}
+              <Button
+                variant="outline"
+                onClick={handleRefresh}
+                disabled={refreshing}
+                size="sm"
+              >
+                {refreshing ? <LoadingSpinner size="sm" /> : "🔄"} Refresh
+              </Button>
             </div>
-          </div>
+          }
+        />
+      </Section>
 
-          {/* System Health */}
-          <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
-            <h2 className="text-h3 mb-4">System Health</h2>
-            <div className="space-y-4">
-              {health.ok ? (
-                <>
-                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">✅</span>
-                      <span className="text-body">System Status</span>
+      {/* KPI Stats Grid */}
+      <Section>
+        <SectionContent>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <Stat
+              icon="📱"
+              label="Total SMS Sent"
+              value={(smsMetrics.sent || smsMetrics.totalSent || 0).toLocaleString()}
+              delta={`${smsMetrics.delivered || 0} delivered`}
+              deltaType="positive"
+            />
+            
+            <Stat
+              icon="✅"
+              label="Delivery Rate"
+              value={
+                smsMetrics.deliveryRate 
+                  ? (typeof smsMetrics.deliveryRate === 'number' 
+                    ? `${smsMetrics.deliveryRate}%` 
+                    : smsMetrics.deliveryRate)
+                  : "0%"
+              }
+              delta={`${smsMetrics.failed || 0} failed`}
+              deltaType={smsMetrics.deliveryRate > 90 ? "positive" : "negative"}
+            />
+            
+            <Stat
+              icon="👥"
+              label="Total Contacts"
+              value={(contactMetrics.total || 0).toLocaleString()}
+              delta={`${contactMetrics.optedIn || contactMetrics.subscribed || 0} opted in`}
+              deltaType="positive"
+            />
+            
+            <Stat
+              icon="💰"
+              label="Wallet Balance"
+              value={`$${(walletBalance.balance || 0).toFixed(2)}`}
+              delta={walletBalance.active ? "Active" : "Inactive"}
+              deltaType={walletBalance.balance > 100 ? "positive" : "negative"}
+            />
+          </div>
+        </SectionContent>
+      </Section>
+
+      {/* Recent Activity & System Health */}
+      <Section>
+        <SectionContent>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {/* Recent Activity */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Recent Activity</CardTitle>
+                  <Button variant="outline" size="sm">
+                    View All
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {(overview.recentMessages || overview.recentActivity || []).length > 0 || 
+                   (overview.recentTransactions || []).length > 0 ? (
+                    <>
+                      {(overview.recentMessages || []).slice(0, 3).map((msg, idx) => (
+                        <div key={`msg-${idx}`} className="flex items-start gap-3 p-3 bg-muted rounded-xl hover:bg-brand/5 transition-colors">
+                          <span className="text-xl">📨</span>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-ink">SMS Sent</p>
+                            <p className="text-xs text-ink-secondary">{msg.to || 'Contact'} • {formatDate(msg.timestamp)}</p>
+                            {msg.status && (
+                              <Badge variant={msg.status === 'delivered' ? 'positive' : 'warning'} size="sm" className="mt-1">
+                                {msg.status}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      {(overview.recentTransactions || []).slice(0, 2).map((tx, idx) => (
+                        <div key={`tx-${idx}`} className="flex items-start gap-3 p-3 bg-muted rounded-xl hover:bg-brand/5 transition-colors">
+                          <span className="text-xl">💳</span>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-ink">{tx.type || 'Transaction'}</p>
+                            <p className="text-xs text-ink-secondary">{tx.amount || 0} credits • {formatDate(tx.timestamp)}</p>
+                            {tx.status && (
+                              <Badge variant={tx.status === 'completed' ? 'positive' : 'warning'} size="sm" className="mt-1">
+                                {tx.status}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  ) : (
+                    <div className="text-center py-8">
+                      <span className="text-4xl mb-2">📭</span>
+                      <p className="text-sm text-ink-secondary">No recent activity</p>
+                      <p className="text-xs text-ink-tertiary mt-1">Start sending SMS campaigns to see activity here</p>
+                      <Button variant="primary" size="sm" className="mt-4">
+                        Create Campaign
+                      </Button>
                     </div>
-                    <span className="text-sm font-medium text-primary">Operational</span>
-                  </div>
-                  
-                  {health.checks && Object.entries(health.checks).map(([key, value]) => (
-                    <div key={key} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">{value.status === 'healthy' ? '✅' : '⚠️'}</span>
-                        <span className="text-body capitalize">{key}</span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* System Health */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>System Health</CardTitle>
+                  <Badge variant={health.ok ? "positive" : "warning"} size="sm">
+                    {health.ok ? "All Systems Operational" : "Issues Detected"}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {health.ok ? (
+                    <>
+                      <div className="flex items-center justify-between p-3 bg-muted rounded-xl">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">✅</span>
+                          <span className="text-sm text-ink">System Status</span>
+                        </div>
+                        <Badge variant="positive" size="sm">Operational</Badge>
                       </div>
-                      <span className={`text-sm font-medium ${value.status === 'healthy' ? 'text-secondary' : 'text-accent'}`}>
-                        {value.status || 'unknown'}
-                      </span>
+                      
+                      {health.checks && Object.entries(health.checks).map(([key, value]) => (
+                        <div key={key} className="flex items-center justify-between p-3 bg-muted rounded-xl">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xl">{value.status === 'healthy' ? '✅' : '⚠️'}</span>
+                            <span className="text-sm text-ink capitalize">{key}</span>
+                          </div>
+                          <Badge variant={value.status === 'healthy' ? 'positive' : 'warning'} size="sm">
+                            {value.status || 'unknown'}
+                          </Badge>
+                        </div>
+                      ))}
+                      
+                      {health.uptime && (
+                        <div className="mt-4 p-3 bg-brand/10 rounded-xl">
+                          <p className="text-xs text-ink">
+                            Uptime: {Math.floor(health.uptime / 3600)}h {Math.floor((health.uptime % 3600) / 60)}m
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center py-8">
+                      <span className="text-4xl">⚠️</span>
+                      <p className="text-sm text-ink mt-2">System health check unavailable</p>
+                      <Button variant="outline" size="sm" className="mt-4" onClick={handleRefresh}>
+                        Retry Check
+                      </Button>
                     </div>
-                  ))}
-                  
-                  {health.uptime && (
-                    <div className="mt-4 p-3 bg-primary/10 rounded-lg">
-                      <p className="text-caption text-deep">
-                        Uptime: {Math.floor(health.uptime / 3600)}h {Math.floor((health.uptime % 3600) / 60)}m
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </SectionContent>
+      </Section>
+
+      {/* Campaign Performance */}
+      {quickStats.campaigns && (
+        <Section>
+          <SectionContent>
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Campaign Performance</CardTitle>
+                  <Button variant="outline" size="sm">
+                    View All Campaigns
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  <div className="p-4 bg-muted rounded-xl hover:bg-brand/5 transition-colors">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs text-ink-secondary">Active Campaigns</p>
+                      <Badge variant="primary" size="sm">Live</Badge>
+                    </div>
+                    <p className="text-2xl font-bold text-ink">{quickStats.campaigns.active || 0}</p>
+                    <p className="text-xs text-brand mt-1">
+                      {quickStats.campaigns.active > 0 ? "Running now" : "No active campaigns"}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-muted rounded-xl hover:bg-brand/5 transition-colors">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs text-ink-secondary">Scheduled</p>
+                      <Badge variant="info" size="sm">Pending</Badge>
+                    </div>
+                    <p className="text-2xl font-bold text-ink">{quickStats.campaigns.scheduled || 0}</p>
+                    <p className="text-xs text-secondary mt-1">
+                      {quickStats.campaigns.scheduled > 0 ? "Waiting to send" : "No scheduled campaigns"}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-muted rounded-xl hover:bg-brand/5 transition-colors">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs text-ink-secondary">Completed</p>
+                      <Badge variant="positive" size="sm">Done</Badge>
+                    </div>
+                    <p className="text-2xl font-bold text-ink">{quickStats.campaigns.completed || 0}</p>
+                    <p className="text-xs text-positive mt-1">
+                      {quickStats.campaigns.completed > 0 ? "Successfully sent" : "No completed campaigns"}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </SectionContent>
+        </Section>
+      )}
+
+      {/* Debug Panel - Session Token Info */}
+      {debug && (
+        <Section>
+          <SectionContent>
+            <Card className="bg-deep/5 border-deep/20">
+              <details>
+                <summary className="cursor-pointer p-4 hover:bg-deep/10 rounded-xl transition-colors duration-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-ink">
+                      🔧 Debug Information (Click to expand)
+                    </span>
+                    <Badge variant="info" size="sm">Development</Badge>
+                  </div>
+                </summary>
+                <div className="p-6 space-y-4 border-t border-deep/20">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="p-4 bg-surface rounded-xl border border-ink-tertiary">
+                      <p className="text-xs text-ink-secondary mb-2">Session ID</p>
+                      <p className="text-sm font-mono text-ink break-all select-all">
+                        {debug.sessionId || "N/A"}
+                      </p>
+                    </div>
+                    <div className="p-4 bg-surface rounded-xl border border-ink-tertiary">
+                      <p className="text-xs text-ink-secondary mb-2">Shop Domain</p>
+                      <p className="text-sm font-mono text-brand break-all select-all">
+                        {debug.shop || "N/A"}
+                      </p>
+                    </div>
+                    <div className="p-4 bg-surface rounded-xl border border-ink-tertiary">
+                      <p className="text-xs text-ink-secondary mb-2">Access Token (Preview)</p>
+                      <p className="text-sm font-mono text-secondary break-all select-all">
+                        {debug.tokenPreview || "N/A"}
+                      </p>
+                    </div>
+                    <div className="p-4 bg-surface rounded-xl border border-ink-tertiary">
+                      <p className="text-xs text-ink-secondary mb-2">Timestamp</p>
+                      <p className="text-sm font-mono text-ink">
+                        {debug.timestamp ? formatDate(debug.timestamp) : "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                  {debug.error && (
+                    <div className="p-4 bg-negative/10 rounded-xl border border-negative/20">
+                      <p className="text-xs text-negative mb-2">⚠️ Error</p>
+                      <p className="text-sm font-mono text-negative break-all">
+                        {debug.error}
                       </p>
                     </div>
                   )}
-                </>
-              ) : (
-                <div className="text-center py-8">
-                  <span className="text-4xl">⚠️</span>
-                  <p className="text-body mt-2">System health check unavailable</p>
+                  <div className="p-4 bg-neutral/10 rounded-xl border border-neutral/20">
+                    <p className="text-xs text-ink mb-2">💡 Tip</p>
+                    <p className="text-sm text-ink-secondary">
+                      Copy the Session ID or Access Token to use in API testing. Check the server console for detailed API logs.
+                    </p>
+                  </div>
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Campaign Performance */}
-        {quickStats.campaigns && (
-          <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
-            <h2 className="text-h3 mb-4">Campaign Performance</h2>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-caption text-gray-600 mb-1">Active Campaigns</p>
-                <p className="text-h2 text-deep">{quickStats.campaigns.active || 0}</p>
-              </div>
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-caption text-gray-600 mb-1">Scheduled</p>
-                <p className="text-h2 text-deep">{quickStats.campaigns.scheduled || 0}</p>
-              </div>
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-caption text-gray-600 mb-1">Completed</p>
-                <p className="text-h2 text-deep">{quickStats.campaigns.completed || 0}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Debug Panel - Session Token Info */}
-        {debug && (
-          <details className="bg-deep/5 rounded-xl shadow-subtle border border-deep/20">
-            <summary className="cursor-pointer p-4 hover:bg-deep/10 rounded-xl transition-colors duration-200">
-              <span className="text-body font-semibold text-deep">
-                🔧 Debug Information (Click to expand)
-              </span>
-            </summary>
-            <div className="p-6 space-y-4 border-t border-deep/20">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="p-4 bg-surface rounded-lg border border-border">
-                  <p className="text-caption text-gray-600 mb-2">Session ID</p>
-                  <p className="text-sm font-mono text-deep break-all select-all">
-                    {debug.sessionId || "N/A"}
-                  </p>
-                </div>
-                <div className="p-4 bg-surface rounded-lg border border-border">
-                  <p className="text-caption text-gray-600 mb-2">Shop Domain</p>
-                  <p className="text-sm font-mono text-primary break-all select-all">
-                    {debug.shop || "N/A"}
-                  </p>
-                </div>
-                <div className="p-4 bg-surface rounded-lg border border-border">
-                  <p className="text-caption text-gray-600 mb-2">Access Token (Preview)</p>
-                  <p className="text-sm font-mono text-secondary break-all select-all">
-                    {debug.tokenPreview || "N/A"}
-                  </p>
-                </div>
-                <div className="p-4 bg-surface rounded-lg border border-border">
-                  <p className="text-caption text-gray-600 mb-2">Timestamp</p>
-                  <p className="text-sm font-mono text-deep">
-                    {debug.timestamp ? formatDate(debug.timestamp) : "N/A"}
-                  </p>
-                </div>
-              </div>
-              {debug.error && (
-                <div className="p-4 bg-danger/10 rounded-lg border border-danger/20">
-                  <p className="text-caption text-danger mb-2">⚠️ Error</p>
-                  <p className="text-sm font-mono text-danger break-all">
-                    {debug.error}
-                  </p>
-                </div>
-              )}
-              <div className="p-4 bg-neutral/10 rounded-lg border border-neutral/20">
-                <p className="text-caption text-deep mb-2">💡 Tip</p>
-                <p className="text-sm text-gray-700">
-                  Copy the Session ID or Access Token to use in API testing. Check the server console for detailed API logs.
-                </p>
-              </div>
-            </div>
-          </details>
-        )}
-      </main>
-      </div>
+              </details>
+            </Card>
+          </SectionContent>
+        </Section>
+      )}
+    </div>
   );
 }

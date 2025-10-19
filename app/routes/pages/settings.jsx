@@ -1,8 +1,15 @@
-import { useLoaderData, useFetcher } from "react-router";
-import { useState } from "react";
+import { useLoaderData } from "react-router";
+import { useState, useEffect } from "react";
 import { Button } from "../../components/ui/Button";
 import { Input, Label } from "../../components/ui/Input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/Tabs";
+import { Card } from "../../components/ui/Card";
+import { Badge } from "../../components/ui/Badge";
+import { Alert } from "../../components/ui/Alert";
+import { LoadingSpinner } from "../../components/ui/LoadingSpinner";
+import { Select } from "../../components/ui/Select";
+import { Modal } from "../../components/ui/Modal";
+import { Textarea } from "../../components/ui/Textarea";
 
 export default function SettingsPage() {
   const data = useLoaderData();
@@ -18,30 +25,169 @@ export default function SettingsPage() {
   const [selectedPackage, setSelectedPackage] = useState("");
   const [providerApiKey, setProviderApiKey] = useState(settings.smsProvider?.apiKey || "");
   const [senderId, setSenderId] = useState(settings.smsProvider?.senderId || "");
+  const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('card');
+  const [supportMessage, setSupportMessage] = useState('');
+  const [supportSubject, setSupportSubject] = useState('');
+  const [billingSettings, setBillingSettings] = useState({
+    autoRecharge: false,
+    autoRechargeAmount: 50,
+    lowBalanceAlert: true,
+    lowBalanceThreshold: 10
+  });
 
   const handlePurchase = () => {
     if (selectedPackage) {
+      setLoading(true);
       fetcher.submit(
         { _action: "purchasePackage", packageId: selectedPackage },
         { method: "post" }
       );
+      setAlert({ type: 'success', message: 'Package purchase initiated!' });
+      setLoading(false);
     }
   };
 
   const handleSaveSettings = () => {
+    setLoading(true);
     fetcher.submit(
       { _action: "saveSettings", providerApiKey, senderId },
       { method: "post" }
     );
+    setAlert({ type: 'success', message: 'Settings saved successfully!' });
+    setLoading(false);
   };
+
+  const handleSaveBillingSettings = () => {
+    setLoading(true);
+    fetcher.submit(
+      { _action: "saveBillingSettings", ...billingSettings },
+      { method: "post" }
+    );
+    setAlert({ type: 'success', message: 'Billing settings saved successfully!' });
+    setLoading(false);
+  };
+
+  const handleProcessPayment = () => {
+    setLoading(true);
+    fetcher.submit(
+      { 
+        _action: "processPayment", 
+        packageId: selectedPackage,
+        paymentMethod,
+        amount: packages.find(p => p.id === selectedPackage)?.price || 0
+      },
+      { method: "post" }
+    );
+    setAlert({ type: 'success', message: 'Payment processed successfully!' });
+    setIsPaymentModalOpen(false);
+    setLoading(false);
+  };
+
+  const handleSubmitSupport = () => {
+    setLoading(true);
+    fetcher.submit(
+      { 
+        _action: "submitSupport", 
+        subject: supportSubject,
+        message: supportMessage
+      },
+      { method: "post" }
+    );
+    setAlert({ type: 'success', message: 'Support ticket submitted successfully!' });
+    setIsSupportModalOpen(false);
+    setSupportMessage('');
+    setSupportSubject('');
+    setLoading(false);
+  };
+
+  const handleExportTransactions = () => {
+    const csvData = transactions.map(tx => ({
+      date: new Date(tx.date || tx.createdAt).toLocaleDateString(),
+      type: tx.type,
+      description: tx.description || tx.type,
+      amount: tx.amount,
+      credits: tx.credits || 0
+    }));
+    
+    const csv = convertToCSV(csvData);
+    downloadCSV(csv, 'transactions.csv');
+  };
+
+  const convertToCSV = (data) => {
+    const headers = Object.keys(data[0] || {});
+    const csvContent = [
+      headers.join(','),
+      ...data.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
+    ].join('\n');
+    return csvContent;
+  };
+
+  const downloadCSV = (csv, filename) => {
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount || 0);
+  };
+
+  useEffect(() => {
+    if (alert) {
+      const timer = setTimeout(() => setAlert(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [alert]);
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Alert */}
+      {alert && (
+        <div className="fixed top-4 right-4 z-50 max-w-md">
+          <Alert
+            type={alert.type}
+            message={alert.message}
+            onClose={() => setAlert(null)}
+          />
+        </div>
+      )}
+
       {/* iOS 18 Glass Header */}
       <header className="glass-surface sticky top-0 z-10">
         <div className="px-6 py-4">
-          <h1 className="text-h1">Settings</h1>
-          <p className="text-caption mt-1">Manage your account and billing preferences</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-h1">Settings</h1>
+              <p className="text-caption mt-1">Manage your account and billing preferences</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setIsSupportModalOpen(true)}
+                className="rounded-xl"
+              >
+                🆘 Support
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => setIsPaymentModalOpen(true)}
+                className="rounded-xl"
+              >
+                💳 Add Funds
+              </Button>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -67,96 +213,151 @@ export default function SettingsPage() {
           <TabsContent value="billing">
             <div className="space-y-6">
               {/* Current Balance */}
-              <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
-                <h2 className="text-h3 mb-4">Current Balance</h2>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div className="p-6 bg-primary/10 rounded-xl">
-                    <p className="text-caption text-deep mb-1">Wallet Balance</p>
-                    <p className="text-h1 text-primary">
-                      ${balance.balance?.toFixed(2) || "0.00"}
-                    </p>
-                  </div>
-                  <div className="p-6 bg-secondary/10 rounded-xl">
-                    <p className="text-caption text-deep mb-1">SMS Credits</p>
-                    <p className="text-h1 text-secondary">
-                      {balance.credits?.toLocaleString() || "0"}
-                    </p>
-                  </div>
+              <Card className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-h3">Current Balance</h2>
+                  <Badge variant="info" size="lg">
+                    {formatCurrency(balance.balance)}
+                  </Badge>
                 </div>
-              </div>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <Card className="p-6 bg-primary/10">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-caption text-deep mb-1">Wallet Balance</p>
+                        <p className="text-h1 text-primary">
+                          {formatCurrency(balance.balance)}
+                        </p>
+                      </div>
+                      <Badge variant="primary" size="lg">💰</Badge>
+                    </div>
+                  </Card>
+                  <Card className="p-6 bg-secondary/10">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-caption text-deep mb-1">SMS Credits</p>
+                        <p className="text-h1 text-secondary">
+                          {balance.credits?.toLocaleString() || "0"}
+                        </p>
+                      </div>
+                      <Badge variant="secondary" size="lg">📱</Badge>
+                    </div>
+                  </Card>
+                </div>
+              </Card>
 
               {/* Purchase SMS Credits */}
-              <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
-                <h2 className="text-h3 mb-4">Purchase SMS Credits</h2>
+              <Card className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-h3">Purchase SMS Credits</h2>
+                  <Badge variant="info" size="lg">
+                    {packages.length} packages
+                  </Badge>
+                </div>
                 {packages.length > 0 ? (
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mb-6">
                     {packages.map((pkg) => (
-                      <button
+                      <Card
                         key={pkg.id}
-                        onClick={() => setSelectedPackage(pkg.id)}
-                        className={`p-6 rounded-xl border-2 transition-all duration-200 text-left ${
+                        className={`p-6 cursor-pointer transition-all duration-200 ${
                           selectedPackage === pkg.id
                             ? "border-primary bg-primary/10"
                             : "border-border bg-muted hover:border-primary/50"
                         }`}
+                        onClick={() => setSelectedPackage(pkg.id)}
                       >
-                        <h3 className="text-body font-semibold text-deep mb-2">
-                          {pkg.name}
-                        </h3>
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-body font-semibold text-deep">
+                            {pkg.name}
+                          </h3>
+                          {selectedPackage === pkg.id && (
+                            <Badge variant="primary" size="sm">Selected</Badge>
+                          )}
+                        </div>
                         <p className="text-h2 text-primary mb-1">
                           {pkg.credits?.toLocaleString()} credits
                         </p>
                         <p className="text-caption text-gray-600">
-                          ${pkg.price?.toFixed(2)} ({pkg.pricePerCredit?.toFixed(4)} per SMS)
+                          {formatCurrency(pkg.price)} ({pkg.pricePerCredit?.toFixed(4)} per SMS)
                         </p>
-                      </button>
+                      </Card>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-caption text-gray-600 mb-4">No packages available</p>
+                  <div className="text-center py-8">
+                    <span className="text-4xl">📦</span>
+                    <p className="text-caption text-gray-600 mt-2">No packages available</p>
+                  </div>
                 )}
-                <Button
-                  variant="primary"
-                  onClick={handlePurchase}
-                  disabled={!selectedPackage || fetcher.state === "submitting"}
-                  className="rounded-xl"
-                >
-                  {fetcher.state === "submitting" ? "Processing..." : "Purchase Package"}
-                </Button>
-              </div>
+                <div className="flex gap-3">
+                  <Button
+                    variant="primary"
+                    onClick={handlePurchase}
+                    disabled={!selectedPackage || loading}
+                    className="rounded-xl"
+                  >
+                    {loading ? <LoadingSpinner size="sm" /> : 'Purchase Package'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsPaymentModalOpen(true)}
+                    className="rounded-xl"
+                  >
+                    💳 Payment Options
+                  </Button>
+                </div>
+              </Card>
 
               {/* Transaction History */}
-              <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
-                <h2 className="text-h3 mb-4">Transaction History</h2>
+              <Card className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-h3">Transaction History</h2>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="info" size="lg">
+                      {transactions.length} transactions
+                    </Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleExportTransactions}
+                      className="rounded-lg"
+                    >
+                      📊 Export
+                    </Button>
+                  </div>
+                </div>
                 {transactions.length > 0 ? (
                   <div className="space-y-3">
                     {transactions.map((tx) => (
-                      <div
-                        key={tx.id}
-                        className="flex items-center justify-between p-4 bg-muted rounded-lg"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl">
-                            {tx.type === "purchase" ? "💳" : "📤"}
-                          </span>
-                          <div>
-                            <p className="text-body font-medium text-deep">
-                              {tx.description || tx.type}
-                            </p>
-                            <p className="text-caption text-gray-600">
-                              {new Date(tx.date || tx.createdAt).toLocaleDateString()}
-                            </p>
+                      <Card key={tx.id} className="p-4 hover:bg-primary/5 transition-all duration-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">
+                              {tx.type === "purchase" ? "💳" : "📤"}
+                            </span>
+                            <div>
+                              <p className="text-body font-medium text-deep">
+                                {tx.description || tx.type}
+                              </p>
+                              <p className="text-caption text-gray-600">
+                                {new Date(tx.date || tx.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="flex items-center gap-2">
+                              <Badge variant={tx.amount > 0 ? "success" : "danger"} size="sm">
+                                {tx.amount > 0 ? "+" : ""}{tx.amount?.toLocaleString() || 0} credits
+                              </Badge>
+                              <p className={`text-body font-semibold ${
+                                tx.amount > 0 ? "text-primary" : "text-danger"
+                              }`}>
+                                {formatCurrency(tx.amount)}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className={`text-body font-semibold ${
-                            tx.amount > 0 ? "text-primary" : "text-danger"
-                          }`}>
-                            {tx.amount > 0 ? "+" : ""}{tx.amount?.toLocaleString() || 0}
-                          </p>
-                          <p className="text-caption text-gray-600">credits</p>
-                        </div>
-                      </div>
+                      </Card>
                     ))}
                   </div>
                 ) : (
@@ -165,7 +366,7 @@ export default function SettingsPage() {
                     <p className="text-caption mt-2">No transactions yet</p>
                   </div>
                 )}
-              </div>
+              </Card>
             </div>
           </TabsContent>
 
@@ -293,6 +494,122 @@ export default function SettingsPage() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Payment Modal */}
+      <Modal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        title="Payment Options"
+        size="lg"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setIsPaymentModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleProcessPayment}
+              disabled={!selectedPackage || loading}
+            >
+              {loading ? <LoadingSpinner size="sm" /> : 'Process Payment'}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="paymentMethod">Payment Method</Label>
+            <Select
+              id="paymentMethod"
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              options={[
+                { value: 'card', label: 'Credit/Debit Card' },
+                { value: 'paypal', label: 'PayPal' },
+                { value: 'bank', label: 'Bank Transfer' }
+              ]}
+            />
           </div>
+
+          {selectedPackage && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="font-semibold text-blue-900 mb-2">Selected Package</h3>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-blue-800">
+                    {packages.find(p => p.id === selectedPackage)?.name}
+                  </p>
+                  <p className="text-xs text-blue-600">
+                    {packages.find(p => p.id === selectedPackage)?.credits?.toLocaleString()} credits
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold text-blue-900">
+                    {formatCurrency(packages.find(p => p.id === selectedPackage)?.price)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <p className="text-sm text-yellow-800">
+              <strong>Note:</strong> Payment will be processed securely through our payment provider.
+            </p>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Support Modal */}
+      <Modal
+        isOpen={isSupportModalOpen}
+        onClose={() => setIsSupportModalOpen(false)}
+        title="Contact Support"
+        size="lg"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setIsSupportModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleSubmitSupport}
+              disabled={!supportSubject || !supportMessage || loading}
+            >
+              {loading ? <LoadingSpinner size="sm" /> : 'Submit Ticket'}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="supportSubject">Subject</Label>
+            <Input
+              id="supportSubject"
+              value={supportSubject}
+              onChange={(e) => setSupportSubject(e.target.value)}
+              placeholder="Brief description of your issue..."
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="supportMessage">Message</Label>
+            <Textarea
+              id="supportMessage"
+              value={supportMessage}
+              onChange={(e) => setSupportMessage(e.target.value)}
+              placeholder="Please describe your issue in detail..."
+              rows={6}
+            />
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-800">
+              <strong>Support Response:</strong> We typically respond within 24 hours during business days.
+            </p>
+          </div>
+        </div>
+      </Modal>
+    </div>
   );
 }

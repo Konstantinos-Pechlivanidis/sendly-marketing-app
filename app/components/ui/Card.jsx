@@ -1,12 +1,27 @@
 import { forwardRef } from "react";
 import { cn } from "../../utils/cn";
 
-const Card = forwardRef(({ className, translucent = false, ...props }, ref) => {
+const Card = forwardRef(({ 
+  className, 
+  variant = "default", 
+  interactive = false,
+  translucent = false, 
+  ...props 
+}, ref) => {
+  const variants = {
+    default: "bg-card border border-white/20 shadow-card",
+    elevated: "bg-card border border-white/20 shadow-elevated",
+    glass: "glass-surface border border-white/20 shadow-glass",
+    outline: "bg-transparent border border-ink-tertiary shadow-none",
+  };
+
   return (
     <div
       ref={ref}
       className={cn(
-        "rounded-lg border border-border bg-surface shadow-subtle",
+        "rounded-2xl transition-all duration-200",
+        variants[variant],
+        interactive && "cursor-pointer hover:-translate-y-1 hover:shadow-elevated",
         translucent && "glass-surface",
         className
       )}
@@ -21,7 +36,7 @@ const CardHeader = forwardRef(({ className, ...props }, ref) => {
   return (
     <div
       ref={ref}
-      className={cn("flex flex-col space-y-1.5 p-6", className)}
+      className={cn("flex flex-col space-y-2 p-6", className)}
       {...props}
     />
   );
@@ -33,7 +48,7 @@ const CardTitle = forwardRef(({ className, ...props }, ref) => {
   return (
     <h3
       ref={ref}
-      className={cn("text-h3 text-deep font-semibold leading-none tracking-tight", className)}
+      className={cn("text-h3 text-ink font-semibold leading-tight tracking-tight", className)}
       {...props}
     />
   );
@@ -45,7 +60,7 @@ const CardDescription = forwardRef(({ className, ...props }, ref) => {
   return (
     <p
       ref={ref}
-      className={cn("text-sm text-muted", className)}
+      className={cn("text-sm text-ink-secondary leading-normal", className)}
       {...props}
     />
   );
@@ -69,7 +84,7 @@ const CardFooter = forwardRef(({ className, ...props }, ref) => {
   return (
     <div
       ref={ref}
-      className={cn("flex items-center p-6 pt-0", className)}
+      className={cn("flex items-center justify-between p-6 pt-0", className)}
       {...props}
     />
   );

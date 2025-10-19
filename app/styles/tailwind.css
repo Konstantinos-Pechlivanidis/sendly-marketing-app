@@ -1,96 +1,260 @@
+@import './tokens.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  /* iOS 18 Design Tokens */
-  :root {
-    /* Brand Palette */
-    --color-primary: #64D3C1;
-    --color-secondary: #1C7B7B;
-    --color-deep: #004E47;
-    --color-neutral: #D9B88C;
-    --color-accent: #E27D43;
-    --color-danger: #8A3E2E;
+  /* Reset and normalize */
+  * {
+    box-sizing: border-box;
+  }
 
-    /* System Tokens */
-    --surface: #FFFFFF;
-    --background: #F8F8F8;
-    --border: rgba(0, 0, 0, 0.1);
-    --muted: rgba(0, 0, 0, 0.05);
-    --ring: var(--color-primary);
+  html {
+    font-family: var(--font-family-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
 
-    /* State Tokens */
-    --primary-hover: #5BC4B1;
-    --primary-active: #52B5A1;
-    --primary-disabled: #A8E6D9;
-    
-    --secondary-hover: #1A6B6B;
-    --secondary-active: #185B5B;
-    --secondary-disabled: #4D9B9B;
-    
-    --deep-hover: #003D37;
-    --deep-active: #002E29;
-    --deep-disabled: #4D7A75;
-    
-    --neutral-hover: #D4B082;
-    --neutral-active: #CFA878;
-    --neutral-disabled: #E5D1B8;
-    
-    --accent-hover: #D66A2F;
-    --accent-active: #CA5D2B;
-    --accent-disabled: #F0A67A;
-    
-    --danger-hover: #7A3629;
-    --danger-active: #6A2F24;
-    --danger-disabled: #B56B5A;
+  body {
+    font-family: var(--font-family-sans);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    color: var(--color-ink);
+    background: linear-gradient(135deg, #F7F9F8 0%, #EAF5F3 100%);
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Focus management */
+  *:focus {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+
+  *:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* iOS 18 smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Typography improvements */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: var(--leading-tight);
+    color: var(--color-ink);
+    margin: 0;
+  }
+
+  p {
+    margin: 0;
+    line-height: var(--leading-normal);
+  }
+
+  /* Button and interactive element improvements */
+  button, [role="button"] {
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+  }
+
+  button:disabled, [role="button"]:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  /* Form elements */
+  input, textarea, select {
+    font-family: inherit;
+    font-size: inherit;
+  }
+
+  /* Remove default button styles */
+  button {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  /* iOS 18 selection styling */
+  ::selection {
+    background-color: var(--color-brand);
+    color: white;
+  }
+
+  /* iOS 18 scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-ink-tertiary);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-ink-secondary);
   }
 }
 
 @layer components {
-  /* iOS 18 Glass Effect */
-  .glass-surface {
-    background-color: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border);
+  /* iOS 18 Glass Effect Components */
+  .glass-card {
+    @apply glass-surface rounded-2xl border border-white/20 shadow-card;
   }
 
-  /* iOS 18 Typography Scale */
-  .text-h1 {
-    font-size: 2.25rem;
-    line-height: 1.2;
-    font-weight: 700;
-    letter-spacing: -0.025em;
-    color: var(--color-deep);
+  .glass-header {
+    @apply glass-surface-strong border-b border-white/20;
   }
 
-  .text-h2 {
-    font-size: 1.875rem;
-    line-height: 1.25;
-    font-weight: 600;
-    letter-spacing: -0.025em;
-    color: var(--color-deep);
+  /* iOS 18 Button Components */
+  .btn-primary {
+    @apply bg-brand text-white rounded-xl px-6 py-3 font-medium transition-all duration-200 hover:bg-brand-hover active:scale-98 focus:ring-2 focus:ring-brand/50 focus:ring-offset-2 disabled:bg-brand-disabled disabled:cursor-not-allowed;
   }
 
-  .text-h3 {
-    font-size: 1.5rem;
-    line-height: 1.3;
-    font-weight: 600;
-    letter-spacing: -0.025em;
-    color: var(--color-deep);
+  .btn-secondary {
+    @apply bg-surface border border-ink-tertiary text-ink rounded-xl px-6 py-3 font-medium transition-all duration-200 hover:bg-surface-secondary hover:border-ink-secondary active:scale-98 focus:ring-2 focus:ring-brand/50 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
-  .text-body {
-    font-size: 1rem;
-    line-height: 1.5;
-    font-weight: 400;
+  .btn-ghost {
+    @apply text-ink-secondary hover:text-ink hover:bg-surface-secondary rounded-xl px-4 py-2 font-medium transition-all duration-200 active:scale-98 focus:ring-2 focus:ring-brand/50 focus:ring-offset-2;
   }
 
-  .text-caption {
-    font-size: 0.875rem;
-    line-height: 1.4;
-    font-weight: 400;
-    color: rgba(0, 0, 0, 0.6);
+  .btn-danger {
+    @apply bg-negative text-white rounded-xl px-6 py-3 font-medium transition-all duration-200 hover:bg-negative-hover active:scale-98 focus:ring-2 focus:ring-negative/50 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* iOS 18 Card Components */
+  .card {
+    @apply bg-card rounded-2xl border border-white/20 shadow-card transition-all duration-200 hover:shadow-elevated;
+  }
+
+  .card-interactive {
+    @apply card cursor-pointer hover:-translate-y-1 hover:shadow-elevated;
+  }
+
+  /* iOS 18 Input Components */
+  .input {
+    @apply w-full px-4 py-3 bg-surface border border-ink-tertiary rounded-xl text-ink placeholder-ink-tertiary transition-all duration-200 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .input-error {
+    @apply input border-negative focus:border-negative focus:ring-negative/20;
+  }
+
+  /* iOS 18 Badge Components */
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .badge-primary {
+    @apply badge bg-brand/10 text-brand;
+  }
+
+  .badge-secondary {
+    @apply badge bg-secondary/10 text-secondary;
+  }
+
+  .badge-accent {
+    @apply badge bg-accent/10 text-accent;
+  }
+
+  .badge-neutral {
+    @apply badge bg-neutral/10 text-neutral-700;
+  }
+
+  /* iOS 18 Layout Components */
+  .section {
+    @apply max-w-7xl mx-auto px-4 lg:px-6 space-y-6;
+  }
+
+  .container {
+    @apply max-w-7xl mx-auto px-4 lg:px-6;
+  }
+
+  /* iOS 18 Animation Classes */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+
+  /* iOS 18 Utility Classes */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* iOS 18 Focus Management */
+  .focus-visible {
+    @apply focus:ring-2 focus:ring-brand/50 focus:ring-offset-2 focus:outline-none;
+  }
+
+  /* iOS 18 Touch Targets */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+@layer utilities {
+  /* iOS 18 specific utilities */
+  .backdrop-blur-ios {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .shadow-ios {
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  }
+
+  .border-ios {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* Accessibility utilities */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .not-sr-only {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
   }
 }

@@ -12,39 +12,20 @@ async function makeRequest(shopify, path, options = {}) {
     ...(options.headers || {}),
   };
 
-  // Add Shopify session headers for authentication
-  console.log("🔍 Session object details:", {
-    hasSession: !!shopify?.session,
-    sessionId: shopify?.session?.id?.substring(0, 30) + "...",
-    hasAccessToken: !!shopify?.session?.accessToken,
-    accessTokenPreview: shopify?.session?.accessToken?.substring(0, 30) + "...",
-    shop: shopify?.session?.shop,
-  });
-  
-  // Use access token (what backend expects)
-  const accessToken = shopify?.session?.accessToken;
-  
-  if (accessToken) {
-    headers["Authorization"] = `Bearer ${accessToken}`;
-    console.log(`✅ Added Authorization header with ACCESS TOKEN`);
-    console.log(`🔑 Access Token: ${accessToken.substring(0, 30)}...`);
-  } else {
-    console.error("❌ No access token found! Falling back to session ID...");
-    const sessionId = shopify?.session?.id;
-    if (sessionId) {
-      headers["Authorization"] = `Bearer ${sessionId}`;
-      console.log(`⚠️ Using SESSION ID instead: ${sessionId}`);
-    } else {
-      console.error("❌ No tokens found!");
-    }
-  }
-  
+  // Backend uses X-Shopify-Shop-Domain for store resolution (per documentation)
+  // The shop domain is used to identify and scope all operations to the correct store
   if (shopify?.session?.shop) {
     headers["X-Shopify-Shop-Domain"] = shopify.session.shop;
-    console.log(`✅ Added shop domain: ${shopify.session.shop}`);
+    console.log(`✅ Added shop domain header: ${shopify.session.shop}`);
   } else {
     console.error("❌ No shop domain found in session!");
   }
+  
+  console.log("🔍 Session details:", {
+    hasSession: !!shopify?.session,
+    shop: shopify?.session?.shop,
+    sessionId: shopify?.session?.id?.substring(0, 30) + "...",
+  });
 
   const merged = {
     headers,

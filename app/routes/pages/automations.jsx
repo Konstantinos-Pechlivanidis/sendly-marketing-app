@@ -1,7 +1,15 @@
 import { useLoaderData, useFetcher } from "react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../../components/ui/Button";
-import { Input, Label, Textarea } from "../../components/ui/Input";
+import { Input, Label } from "../../components/ui/Input";
+import { Textarea } from "../../components/ui/Textarea";
+import { Card } from "../../components/ui/Card";
+import { Badge } from "../../components/ui/Badge";
+import { Modal } from "../../components/ui/Modal";
+import { Select } from "../../components/ui/Select";
+import { Alert } from "../../components/ui/Alert";
+import { LoadingSpinner } from "../../components/ui/LoadingSpinner";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/Tabs";
 
 export default function AutomationsPage() {
   const data = useLoaderData();
@@ -12,6 +20,25 @@ export default function AutomationsPage() {
 
   const [selectedAutomation, setSelectedAutomation] = useState(null);
   const [editMode, setEditMode] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState(null);
+  const [filters, setFilters] = useState({
+    status: 'all',
+    type: 'all',
+    search: ''
+  });
+  const [sortBy, setSortBy] = useState('name');
+  const [sortOrder, setSortOrder] = useState('asc');
+  const [formData, setFormData] = useState({
+    name: '',
+    type: '',
+    message: '',
+    trigger: '',
+    schedule: { delay: 1, timeUnit: 'hours' },
+    conditions: []
+  });
 
   const getAutomationIcon = (type) => {
     const icons = {
@@ -38,53 +65,296 @@ export default function AutomationsPage() {
     );
   };
 
+  const handleCreateAutomation = async () => {
+    setLoading(true);
+    try {
+      fetcher.submit(
+        {
+          _action: "createAutomation",
+          ...formData,
+          schedule: JSON.stringify(formData.schedule)
+        },
+        { method: "post" }
+      );
+      setAlert({ type: 'success', message: 'Automation created successfully!' });
+      setIsCreateModalOpen(false);
+      setFormData({
+        name: '',
+        type: '',
+        message: '',
+        trigger: '',
+        schedule: { delay: 1, timeUnit: 'hours' },
+        conditions: []
+      });
+    } catch (error) {
+      setAlert({ type: 'error', message: `Failed to create automation: ${error.message}` });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteAutomation = (automationId) => {
+    if (confirm('Are you sure you want to delete this automation?')) {
+      fetcher.submit(
+        { _action: "deleteAutomation", id: automationId },
+        { method: "post" }
+      );
+      setAlert({ type: 'success', message: 'Automation deleted successfully!' });
+    }
+  };
+
+  const handleDuplicateAutomation = (automation) => {
+    setFormData({
+      name: `${automation.name} (Copy)`,
+      type: automation.type,
+      message: automation.message,
+      trigger: automation.trigger?.type || '',
+      schedule: automation.schedule || { delay: 1, timeUnit: 'hours' },
+      conditions: automation.conditions || []
+    });
+    setIsCreateModalOpen(true);
+  };
+
+  const handlePreviewAutomation = (automation) => {
+    setSelectedAutomation(automation);
+    setIsPreviewModalOpen(true);
+  };
+
+  const handleTestAutomation = (automationId) => {
+    setLoading(true);
+    fetcher.submit(
+      { _action: "testAutomation", id: automationId },
+      { method: "post" }
+    );
+    setAlert({ type: 'success', message: 'Test automation triggered!' });
+    setLoading(false);
+  };
+
+  const handleExportAutomations = () => {
+    const csvData = automations.map(automation => ({
+      name: automation.name,
+      type: automation.type,
+      status: automation.enabled ? 'enabled' : 'disabled',
+      message: automation.message,
+      schedule: automation.schedule ? `${automation.schedule.delay} ${automation.schedule.timeUnit}` : '',
+      stats: automation.stats ? `${automation.stats.sent || 0} sent, ${automation.stats.deliveryRate || '0%'} delivered` : ''
+    }));
+    
+    const csv = convertToCSV(csvData);
+    downloadCSV(csv, 'automations.csv');
+  };
+
+  const convertToCSV = (data) => {
+    const headers = Object.keys(data[0] || {});
+    const csvContent = [
+      headers.join(','),
+      ...data.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
+    ].join('\n');
+    return csvContent;
+  };
+
+  const downloadCSV = (csv, filename) => {
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const filteredAutomations = automations.filter(automation => {
+    if (filters.status !== 'all' && filters.status !== (automation.enabled ? 'enabled' : 'disabled')) return false;
+    if (filters.type !== 'all' && automation.type !== filters.type) return false;
+    if (filters.search && !automation.name?.toLowerCase().includes(filters.search.toLowerCase())) return false;
+    return true;
+  });
+
+  const sortedAutomations = [...filteredAutomations].sort((a, b) => {
+    const aValue = a[sortBy] || '';
+    const bValue = b[sortBy] || '';
+    return sortOrder === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+  });
+
+  useEffect(() => {
+    if (alert) {
+      const timer = setTimeout(() => setAlert(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [alert]);
+
   return (
     <div className="min-h-screen bg-background">
       {/* iOS 18 Glass Header */}
       <header className="glass-surface sticky top-0 z-10">
         <div className="px-6 py-4">
-          <h1 className="text-h1">Automations</h1>
-          <p className="text-caption mt-1">Set up automated SMS sequences based on customer behavior</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-h1">Automations</h1>
+              <p className="text-caption mt-1">Set up automated SMS sequences based on customer behavior</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={handleExportAutomations}
+                className="rounded-xl"
+              >
+                📊 Export
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => setIsCreateModalOpen(true)}
+                className="rounded-xl"
+              >
+                ➕ Create Automation
+              </Button>
+            </div>
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="p-6 space-y-6">
-        {/* Stats Overview */}
-        {stats.totalAutomations !== undefined && (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-            <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
-              <p className="text-caption text-gray-600 mb-1">Total Automations</p>
-              <p className="text-h2 text-deep">{stats.totalAutomations || 0}</p>
-            </div>
-            <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
-              <p className="text-caption text-gray-600 mb-1">Active</p>
-              <p className="text-h2 text-primary">{stats.active || 0}</p>
-            </div>
-            <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
-              <p className="text-caption text-gray-600 mb-1">Total Triggered</p>
-              <p className="text-h2 text-secondary">{stats.totalTriggered?.toLocaleString() || 0}</p>
-            </div>
-            <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
-              <p className="text-caption text-gray-600 mb-1">Success Rate</p>
-              <p className="text-h2 text-deep">{stats.successRate || "0%"}</p>
-            </div>
+        {/* Alert */}
+        {alert && (
+          <div className="fixed top-4 right-4 z-50 max-w-md">
+            <Alert
+              type={alert.type}
+              message={alert.message}
+              onClose={() => setAlert(null)}
+            />
           </div>
         )}
 
+        {/* Stats Overview */}
+        {stats.totalAutomations !== undefined && (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <Card className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-caption text-gray-600 mb-1">Total Automations</p>
+                  <p className="text-h2 text-deep">{stats.totalAutomations || 0}</p>
+                </div>
+                <Badge variant="info" size="lg">🤖</Badge>
+              </div>
+            </Card>
+            <Card className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-caption text-gray-600 mb-1">Active</p>
+                  <p className="text-h2 text-primary">{stats.active || 0}</p>
+                </div>
+                <Badge variant="success" size="lg">✅</Badge>
+              </div>
+            </Card>
+            <Card className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-caption text-gray-600 mb-1">Total Triggered</p>
+                  <p className="text-h2 text-secondary">{stats.totalTriggered?.toLocaleString() || 0}</p>
+                </div>
+                <Badge variant="warning" size="lg">📈</Badge>
+              </div>
+            </Card>
+            <Card className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-caption text-gray-600 mb-1">Success Rate</p>
+                  <p className="text-h2 text-deep">{stats.successRate || "0%"}</p>
+                </div>
+                <Badge variant="info" size="lg">📊</Badge>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Advanced Filters */}
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Advanced Filters</h3>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setFilters({ status: 'all', type: 'all', search: '' })}
+              className="rounded-lg"
+            >
+              Clear Filters
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <Label htmlFor="statusFilter">Status</Label>
+              <Select
+                id="statusFilter"
+                value={filters.status}
+                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                options={[
+                  { value: 'all', label: 'All Status' },
+                  { value: 'enabled', label: 'Enabled' },
+                  { value: 'disabled', label: 'Disabled' }
+                ]}
+              />
+            </div>
+            <div>
+              <Label htmlFor="typeFilter">Type</Label>
+              <Select
+                id="typeFilter"
+                value={filters.type}
+                onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+                options={[
+                  { value: 'all', label: 'All Types' },
+                  { value: 'welcome', label: 'Welcome' },
+                  { value: 'abandoned-cart', label: 'Abandoned Cart' },
+                  { value: 'birthday', label: 'Birthday' },
+                  { value: 'order-confirmation', label: 'Order Confirmation' },
+                  { value: 'shipping-notification', label: 'Shipping Notification' }
+                ]}
+              />
+            </div>
+            <div>
+              <Label htmlFor="searchFilter">Search</Label>
+              <Input
+                id="searchFilter"
+                value={filters.search}
+                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                placeholder="Search automations..."
+              />
+            </div>
+            <div>
+              <Label htmlFor="sortBy">Sort By</Label>
+              <Select
+                id="sortBy"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                options={[
+                  { value: 'name', label: 'Name' },
+                  { value: 'type', label: 'Type' },
+                  { value: 'createdAt', label: 'Created Date' },
+                  { value: 'stats.sent', label: 'Messages Sent' }
+                ]}
+              />
+            </div>
+          </div>
+        </Card>
+
         {/* Automations List */}
-        {automations.length > 0 ? (
+        {sortedAutomations.length > 0 ? (
           <div className="grid grid-cols-1 gap-6">
-            {automations.map((automation) => (
-              <div
-                key={automation.id || automation.type}
-                className="bg-surface rounded-xl shadow-subtle border border-border p-6 hover:shadow-elevated transition-shadow duration-200"
-              >
+            {sortedAutomations.map((automation) => (
+              <Card key={automation.id || automation.type} className="hover:shadow-elevated transition-all duration-200">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3 flex-1">
                     <span className="text-4xl">{getAutomationIcon(automation.type)}</span>
                     <div className="flex-1">
-                      <h2 className="text-h3">{automation.name || automation.type}</h2>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h2 className="text-h3">{automation.name || automation.type}</h2>
+                        <Badge variant={automation.enabled ? 'success' : 'secondary'}>
+                          {automation.enabled ? 'Active' : 'Inactive'}
+                        </Badge>
+                        <Badge variant="info" size="sm">
+                          {automation.type}
+                        </Badge>
+                      </div>
                       <p className="text-caption text-gray-600 mt-1">{automation.description}</p>
                     </div>
                   </div>
@@ -155,7 +425,16 @@ export default function AutomationsPage() {
                     )}
 
                     {/* Actions */}
-                    <div className="flex gap-3 pt-2">
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-lg"
+                        onClick={() => handlePreviewAutomation(automation)}
+                        disabled={loading}
+                      >
+                        👁️ Preview
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
@@ -164,11 +443,27 @@ export default function AutomationsPage() {
                           setSelectedAutomation(automation);
                           setEditMode(true);
                         }}
+                        disabled={loading}
                       >
                         ✏️ Edit
                       </Button>
-                      <Button variant="outline" size="sm" className="rounded-lg">
-                        📊 View Stats
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="rounded-lg"
+                        onClick={() => handleTestAutomation(automation.id || automation.type)}
+                        disabled={loading}
+                      >
+                        🧪 Test
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="rounded-lg"
+                        onClick={() => handleDuplicateAutomation(automation)}
+                        disabled={loading}
+                      >
+                        📋 Duplicate
                       </Button>
                       <Button
                         variant="outline"
@@ -180,96 +475,278 @@ export default function AutomationsPage() {
                             { method: "post" }
                           );
                         }}
+                        disabled={loading}
                       >
                         🔄 Reset
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-lg text-red-600 border-red-300 hover:bg-red-50"
+                        onClick={() => handleDeleteAutomation(automation.id || automation.type)}
+                        disabled={loading}
+                      >
+                        🗑️ Delete
                       </Button>
                     </div>
                   </div>
                 )}
-              </div>
+              </Card>
             ))}
           </div>
         ) : (
-          <div className="bg-surface rounded-xl shadow-subtle border border-border p-12 text-center">
+          <Card className="p-12 text-center">
             <div className="max-w-md mx-auto">
               <span className="text-6xl">🤖</span>
               <h3 className="text-h3 mt-4 mb-2">No automations configured</h3>
               <p className="text-caption mb-6">
                 Set up automated SMS sequences to engage customers at the right time
               </p>
+              <Button
+                variant="primary"
+                onClick={() => setIsCreateModalOpen(true)}
+                className="rounded-xl"
+              >
+                ➕ Create Your First Automation
+              </Button>
             </div>
-          </div>
+          </Card>
         )}
       </main>
 
-      {/* Edit Modal */}
-      {editMode && selectedAutomation && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="w-full max-w-2xl bg-surface rounded-2xl shadow-elevated border border-border max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-border sticky top-0 bg-surface">
-              <h2 className="text-h3">Edit Automation: {selectedAutomation.name}</h2>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <Label>Automation Type</Label>
-                <div className="mt-1 p-3 bg-muted rounded-lg">
-                  <p className="text-body text-deep">{selectedAutomation.type}</p>
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="automationMessage">Message Content</Label>
-                <Textarea
-                  id="automationMessage"
-                  defaultValue={selectedAutomation.message}
-                  placeholder="Enter automation message"
-                  className="mt-1"
-                  rows={4}
-                />
-              </div>
-              {selectedAutomation.schedule && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="delay">Delay</Label>
-                    <Input
-                      id="delay"
-                      type="number"
-                      defaultValue={selectedAutomation.schedule.delay}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="timeUnit">Time Unit</Label>
-                    <select
-                      id="timeUnit"
-                      defaultValue={selectedAutomation.schedule.timeUnit}
-                      className="mt-1 w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary"
-                    >
-                      <option value="minutes">Minutes</option>
-                      <option value="hours">Hours</option>
-                      <option value="days">Days</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="p-6 border-t border-border flex justify-end gap-3 sticky bottom-0 bg-surface">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setEditMode(false);
-                  setSelectedAutomation(null);
-                }}
-                className="rounded-xl"
-              >
-                Cancel
-              </Button>
-              <Button variant="primary" className="rounded-xl">
-                Save Changes
-              </Button>
-            </div>
+      {/* Create Automation Modal */}
+      <Modal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        title="Create New Automation"
+        size="lg"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleCreateAutomation}
+              disabled={!formData.name || !formData.message || loading}
+            >
+              {loading ? <LoadingSpinner size="sm" /> : 'Create Automation'}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <Input
+            label="Automation Name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            placeholder="e.g. Welcome New Customers"
+          />
+          
+          <Select
+            label="Automation Type"
+            value={formData.type}
+            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+            options={[
+              { value: 'welcome', label: 'Welcome New Customers' },
+              { value: 'abandoned-cart', label: 'Abandoned Cart Recovery' },
+              { value: 'birthday', label: 'Birthday Wishes' },
+              { value: 'order-confirmation', label: 'Order Confirmation' },
+              { value: 'shipping-notification', label: 'Shipping Notification' }
+            ]}
+          />
+          
+          <Textarea
+            label="Message Content"
+            value={formData.message}
+            onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+            placeholder="Enter your automation message..."
+            rows={4}
+            maxLength={160}
+          />
+          
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Delay"
+              type="number"
+              value={formData.schedule.delay}
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                schedule: { ...formData.schedule, delay: parseInt(e.target.value) || 1 }
+              })}
+              min="1"
+            />
+            <Select
+              label="Time Unit"
+              value={formData.schedule.timeUnit}
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                schedule: { ...formData.schedule, timeUnit: e.target.value }
+              })}
+              options={[
+                { value: 'minutes', label: 'Minutes' },
+                { value: 'hours', label: 'Hours' },
+                { value: 'days', label: 'Days' }
+              ]}
+            />
           </div>
         </div>
-      )}
+      </Modal>
+
+      {/* Edit Modal */}
+      <Modal
+        isOpen={editMode}
+        onClose={() => {
+          setEditMode(false);
+          setSelectedAutomation(null);
+        }}
+        title={`Edit Automation: ${selectedAutomation?.name}`}
+        size="lg"
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditMode(false);
+                setSelectedAutomation(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button variant="primary" disabled={loading}>
+              {loading ? <LoadingSpinner size="sm" /> : 'Save Changes'}
+            </Button>
+          </>
+        }
+      >
+        {selectedAutomation && (
+          <div className="space-y-4">
+            <div>
+              <Label>Automation Type</Label>
+              <div className="mt-1 p-3 bg-muted rounded-lg">
+                <p className="text-body text-deep">{selectedAutomation.type}</p>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="automationMessage">Message Content</Label>
+              <Textarea
+                id="automationMessage"
+                defaultValue={selectedAutomation.message}
+                placeholder="Enter automation message"
+                rows={4}
+              />
+            </div>
+            {selectedAutomation.schedule && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="delay">Delay</Label>
+                  <Input
+                    id="delay"
+                    type="number"
+                    defaultValue={selectedAutomation.schedule.delay}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="timeUnit">Time Unit</Label>
+                  <Select
+                    id="timeUnit"
+                    defaultValue={selectedAutomation.schedule.timeUnit}
+                    options={[
+                      { value: 'minutes', label: 'Minutes' },
+                      { value: 'hours', label: 'Hours' },
+                      { value: 'days', label: 'Days' }
+                    ]}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
+
+      {/* Preview Modal */}
+      <Modal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        title="Automation Preview"
+        size="lg"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setIsPreviewModalOpen(false)}>
+              Close
+            </Button>
+            <Button variant="primary" onClick={() => {
+              setIsPreviewModalOpen(false);
+              setSelectedAutomation(selectedAutomation);
+              setEditMode(true);
+            }}>
+              Edit Automation
+            </Button>
+          </>
+        }
+      >
+        {selectedAutomation && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <span className="text-4xl">{getAutomationIcon(selectedAutomation.type)}</span>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {selectedAutomation.name}
+                </h3>
+                <Badge variant={selectedAutomation.enabled ? 'success' : 'secondary'}>
+                  {selectedAutomation.enabled ? 'Active' : 'Inactive'}
+                </Badge>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-6 border-2 border-gray-200">
+              <p className="text-sm font-medium text-gray-700 mb-2">Message Content:</p>
+              <p className="text-base text-gray-900 whitespace-pre-wrap">
+                {selectedAutomation.message}
+              </p>
+            </div>
+
+            {selectedAutomation.trigger && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm font-medium text-blue-900 mb-2">Trigger:</p>
+                <p className="text-sm text-blue-800">{selectedAutomation.trigger.description}</p>
+              </div>
+            )}
+
+            {selectedAutomation.schedule && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="text-sm font-medium text-green-900 mb-2">Schedule:</p>
+                <p className="text-sm text-green-800">
+                  {selectedAutomation.schedule.delay} {selectedAutomation.schedule.timeUnit} after trigger
+                </p>
+              </div>
+            )}
+
+            {selectedAutomation.stats && (
+              <div className="grid grid-cols-3 gap-4">
+                <div className="p-3 bg-blue-50 rounded-lg text-center">
+                  <p className="text-gray-600 mb-1">Sent</p>
+                  <p className="font-semibold text-gray-900">
+                    {selectedAutomation.stats.sent?.toLocaleString() || 0}
+                  </p>
+                </div>
+                <div className="p-3 bg-green-50 rounded-lg text-center">
+                  <p className="text-gray-600 mb-1">Delivered</p>
+                  <p className="font-semibold text-gray-900">
+                    {selectedAutomation.stats.deliveryRate || '0%'}
+                  </p>
+                </div>
+                <div className="p-3 bg-purple-50 rounded-lg text-center">
+                  <p className="text-gray-600 mb-1">Converted</p>
+                  <p className="font-semibold text-gray-900">
+                    {selectedAutomation.stats.conversionRate || '0%'}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
