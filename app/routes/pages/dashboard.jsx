@@ -347,9 +347,6 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-          </div>
-        </SectionContent>
-      </Section>
 
       {/* Campaign Performance */}
       {quickStats.campaigns && (
@@ -508,7 +505,6 @@ export default function DashboardPage() {
           </details>
         </Card>
       )}
-        </PageSection>
       </PageContent>
     </PageLayout>
   );
