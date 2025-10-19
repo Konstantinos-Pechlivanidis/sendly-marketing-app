@@ -3,13 +3,16 @@ import { useState, useEffect } from "react";
 import { Button } from "../../components/ui/Button";
 import { Input, Label } from "../../components/ui/Input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/Tabs";
-import { Card } from "../../components/ui/Card";
+import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { Alert } from "../../components/ui/Alert";
 import { LoadingSpinner } from "../../components/ui/LoadingSpinner";
 import { Select } from "../../components/ui/Select";
 import { Modal } from "../../components/ui/Modal";
 import { Textarea } from "../../components/ui/Textarea";
+import { PageLayout, PageHeader, PageContent, PageSection } from "../../components/ui/PageLayout";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbSeparator } from "../../components/ui/Breadcrumb";
+import { ActionButton, ActionGroup } from "../../components/ui/ActionButton";
 
 export default function SettingsPage() {
   const data = useLoaderData();
@@ -150,7 +153,7 @@ export default function SettingsPage() {
   }, [alert]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <PageLayout>
       {/* Alert */}
       {alert && (
         <div className="fixed top-4 right-4 z-50 max-w-md">
@@ -162,36 +165,38 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* iOS 18 Glass Header */}
-      <header className="glass-surface sticky top-0 z-10">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-h1">Settings</h1>
-              <p className="text-caption mt-1">Manage your account and billing preferences</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setIsSupportModalOpen(true)}
-                className="rounded-xl"
-              >
-                🆘 Support
-              </Button>
-              <Button
-                variant="primary"
-                onClick={() => setIsPaymentModalOpen(true)}
-                className="rounded-xl"
-              >
-                💳 Add Funds
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Page Header */}
+      <PageHeader
+        title="Settings"
+        subtitle="Manage your account and billing preferences"
+        actions={
+          <ActionGroup>
+            <ActionButton
+              variant="outline"
+              onClick={() => setIsSupportModalOpen(true)}
+            >
+              🆘 Support
+            </ActionButton>
+            <ActionButton
+              variant="primary"
+              onClick={() => setIsPaymentModalOpen(true)}
+            >
+              💳 Add Funds
+            </ActionButton>
+          </ActionGroup>
+        }
+      >
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb>
+          <BreadcrumbItem href="/app">Sendly</BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem isLast>Settings</BreadcrumbItem>
+        </Breadcrumb>
+      </PageHeader>
 
-      {/* Main Content */}
-      <main className="p-6 space-y-6">
+      {/* Page Content */}
+      <PageContent>
+        <PageSection>
         <Tabs defaultValue="billing">
           <TabsList className="flex gap-2 bg-muted rounded-xl p-2 mb-6 overflow-x-auto">
             <TabsTrigger value="billing" className="rounded-lg px-6 py-2">
@@ -609,6 +614,8 @@ export default function SettingsPage() {
           </div>
         </div>
       </Modal>
-    </div>
+        </PageSection>
+      </PageContent>
+    </PageLayout>
   );
 }

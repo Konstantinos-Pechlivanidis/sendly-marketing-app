@@ -7,9 +7,12 @@ import { Modal } from "../../components/ui/Modal";
 import { Select } from "../../components/ui/Select";
 import { Badge } from "../../components/ui/Badge";
 import { Alert } from "../../components/ui/Alert";
-import { Card } from "../../components/ui/Card";
+import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/Card";
 import { LoadingSpinner } from "../../components/ui/LoadingSpinner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/Tabs";
+import { PageLayout, PageHeader, PageContent, PageSection } from "../../components/ui/PageLayout";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbSeparator } from "../../components/ui/Breadcrumb";
+import { ActionButton, ActionGroup } from "../../components/ui/ActionButton";
 import { api } from "../../utils/api.client";
 
 export default function TemplatesPage() {
@@ -247,7 +250,7 @@ export default function TemplatesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <PageLayout>
       {/* Alert */}
       {alert && (
         <div className="fixed top-4 right-4 z-50 max-w-md">
@@ -259,36 +262,38 @@ export default function TemplatesPage() {
         </div>
       )}
 
-      {/* Header */}
-      <header className="glass-surface sticky top-0 z-10">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-h1">SMS Templates</h1>
-              <p className="text-caption mt-1">Browse and use pre-made SMS message templates</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                onClick={handleExportTemplates}
-                className="rounded-xl"
-              >
-                📊 Export
-              </Button>
-              <Button
-                variant="primary"
-                onClick={() => setIsCreateModalOpen(true)}
-                className="rounded-xl"
-              >
-                ➕ Create Template
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Page Header */}
+      <PageHeader
+        title="SMS Templates"
+        subtitle="Browse and use pre-made SMS message templates"
+        actions={
+          <ActionGroup>
+            <ActionButton
+              variant="outline"
+              onClick={handleExportTemplates}
+            >
+              📊 Export
+            </ActionButton>
+            <ActionButton
+              variant="primary"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              ➕ Create Template
+            </ActionButton>
+          </ActionGroup>
+        }
+      >
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb>
+          <BreadcrumbItem href="/app">Sendly</BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem isLast>Templates</BreadcrumbItem>
+        </Breadcrumb>
+      </PageHeader>
 
-      {/* Main Content */}
-      <main className="p-6 space-y-6">
+      {/* Page Content */}
+      <PageContent>
+        <PageSection>
         {/* Advanced Filters */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
@@ -938,7 +943,9 @@ export default function TemplatesPage() {
           </div>
         </div>
       </Modal>
-    </div>
+        </PageSection>
+      </PageContent>
+    </PageLayout>
   );
 }
 

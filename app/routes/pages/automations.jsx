@@ -3,13 +3,16 @@ import { useState, useEffect } from "react";
 import { Button } from "../../components/ui/Button";
 import { Input, Label } from "../../components/ui/Input";
 import { Textarea } from "../../components/ui/Textarea";
-import { Card } from "../../components/ui/Card";
+import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { Modal } from "../../components/ui/Modal";
 import { Select } from "../../components/ui/Select";
 import { Alert } from "../../components/ui/Alert";
 import { LoadingSpinner } from "../../components/ui/LoadingSpinner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/Tabs";
+import { PageLayout, PageHeader, PageContent, PageSection } from "../../components/ui/PageLayout";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbSeparator } from "../../components/ui/Breadcrumb";
+import { ActionButton, ActionGroup } from "../../components/ui/ActionButton";
 
 export default function AutomationsPage() {
   const data = useLoaderData();
@@ -183,37 +186,39 @@ export default function AutomationsPage() {
   }, [alert]);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* iOS 18 Glass Header */}
-      <header className="glass-surface sticky top-0 z-10">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-h1">Automations</h1>
-              <p className="text-caption mt-1">Set up automated SMS sequences based on customer behavior</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                onClick={handleExportAutomations}
-                className="rounded-xl"
-              >
-                📊 Export
-              </Button>
-              <Button
-                variant="primary"
-                onClick={() => setIsCreateModalOpen(true)}
-                className="rounded-xl"
-              >
-                ➕ Create Automation
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <PageLayout>
+      {/* Page Header */}
+      <PageHeader
+        title="Automations"
+        subtitle="Set up automated SMS sequences based on customer behavior"
+        actions={
+          <ActionGroup>
+            <ActionButton
+              variant="outline"
+              onClick={handleExportAutomations}
+            >
+              📊 Export
+            </ActionButton>
+            <ActionButton
+              variant="primary"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              ➕ Create Automation
+            </ActionButton>
+          </ActionGroup>
+        }
+      >
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb>
+          <BreadcrumbItem href="/app">Sendly</BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem isLast>Automations</BreadcrumbItem>
+        </Breadcrumb>
+      </PageHeader>
 
-      {/* Main Content */}
-      <main className="p-6 space-y-6">
+      {/* Page Content */}
+      <PageContent>
+        <PageSection>
         {/* Alert */}
         {alert && (
           <div className="fixed top-4 right-4 z-50 max-w-md">
@@ -746,6 +751,8 @@ export default function AutomationsPage() {
           </div>
         )}
       </Modal>
-    </div>
+        </PageSection>
+      </PageContent>
+    </PageLayout>
   );
 }

@@ -2,13 +2,16 @@ import { useLoaderData } from "react-router";
 import { useState, useEffect } from "react";
 import { Button } from "../../components/ui/Button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/Tabs";
-import { Card } from "../../components/ui/Card";
+import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { Alert } from "../../components/ui/Alert";
 import { LoadingSpinner } from "../../components/ui/LoadingSpinner";
 import { Select } from "../../components/ui/Select";
 import { Input, Label } from "../../components/ui/Input";
 import { Modal } from "../../components/ui/Modal";
+import { PageLayout, PageHeader, PageContent, PageSection } from "../../components/ui/PageLayout";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbSeparator } from "../../components/ui/Breadcrumb";
+import { ActionButton, ActionGroup } from "../../components/ui/ActionButton";
 
 export default function ReportsPage() {
   const data = useLoaderData();
@@ -128,7 +131,7 @@ export default function ReportsPage() {
   }, [alert]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <PageLayout>
       {/* Alert */}
       {alert && (
         <div className="fixed top-4 right-4 z-50 max-w-md">
@@ -597,6 +600,6 @@ export default function ReportsPage() {
           </div>
         </div>
       </Modal>
-    </div>
+    </PageLayout>
   );
 }
