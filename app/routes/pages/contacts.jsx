@@ -317,7 +317,9 @@ export default function ContactsPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm text-gray-600">Total Contacts</p>
-                  <span className="text-2xl">👥</span>
+                  <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <div className="w-4 h-4 bg-primary rounded-sm"></div>
+                  </div>
                 </div>
                 <p className="text-2xl font-bold text-gray-900">{stats.total?.toLocaleString() || 0}</p>
               </CardContent>
@@ -326,7 +328,9 @@ export default function ContactsPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm text-gray-600">Subscribed</p>
-                  <span className="text-2xl">✅</span>
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                    <div className="w-4 h-4 bg-green-600 rounded-sm"></div>
+                  </div>
                 </div>
                 <p className="text-2xl font-bold text-primary">{stats.subscribed?.toLocaleString() || 0}</p>
               </CardContent>
@@ -335,7 +339,9 @@ export default function ContactsPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm text-gray-600">Unsubscribed</p>
-                  <span className="text-2xl">❌</span>
+                  <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                    <div className="w-4 h-4 bg-red-600 rounded-sm"></div>
+                  </div>
                 </div>
                 <p className="text-2xl font-bold text-red-600">{stats.unsubscribed?.toLocaleString() || 0}</p>
               </CardContent>
@@ -344,7 +350,9 @@ export default function ContactsPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm text-gray-600">Growth</p>
-                  <span className="text-2xl">📈</span>
+                  <div className="w-8 h-8 bg-secondary/10 rounded-lg flex items-center justify-center">
+                    <div className="w-4 h-4 bg-secondary rounded-sm"></div>
+                  </div>
                 </div>
                 <p className="text-2xl font-bold text-secondary">{stats.growth || "+0%"}</p>
               </CardContent>

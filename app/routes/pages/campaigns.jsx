@@ -215,7 +215,7 @@ export default function CampaignsPage() {
               variant="outline" 
               onClick={() => setFilters({...filters, search: '', status: 'all'})}
             >
-              🔍 Clear Filters
+              Clear Filters
             </ActionButton>
             <ActionButton variant="primary" onClick={() => setIsModalOpen(true)}>
               + New Campaign
@@ -245,7 +245,7 @@ export default function CampaignsPage() {
                     <p className="text-3xl font-bold text-gray-900">{stats.totalCampaigns || 0}</p>
                   </div>
                   <div className="w-12 h-12 bg-deep/10 rounded-xl flex items-center justify-center">
-                    <span className="text-2xl">📊</span>
+                    <div className="w-6 h-6 bg-deep rounded-md"></div>
                   </div>
                 </div>
               </CardContent>
@@ -259,7 +259,7 @@ export default function CampaignsPage() {
                     <p className="text-3xl font-bold text-primary">{stats.active || 0}</p>
                   </div>
                   <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-                    <span className="text-2xl">🚀</span>
+                    <div className="w-6 h-6 bg-primary rounded-md"></div>
                   </div>
                 </div>
               </CardContent>
@@ -273,7 +273,7 @@ export default function CampaignsPage() {
                     <p className="text-3xl font-bold text-secondary">{stats.scheduled || 0}</p>
                   </div>
                   <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center">
-                    <span className="text-2xl">⏰</span>
+                    <div className="w-6 h-6 bg-secondary rounded-md"></div>
                   </div>
                 </div>
               </CardContent>
@@ -287,7 +287,7 @@ export default function CampaignsPage() {
                     <p className="text-3xl font-bold text-green-600">{stats.completed || 0}</p>
                   </div>
                   <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                    <span className="text-2xl">✅</span>
+                    <div className="w-6 h-6 bg-green-600 rounded-md"></div>
                   </div>
                 </div>
               </CardContent>

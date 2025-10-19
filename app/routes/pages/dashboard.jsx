@@ -121,96 +121,104 @@ export default function DashboardPage() {
 
       {/* Page Content */}
       <PageContent>
-        <PageSection>
+        {/* Hero Section */}
+        <section className="max-w-7xl mx-auto px-4 py-10 space-y-6">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">SMS Marketing Dashboard</h1>
+            <p className="text-base text-deep/90 leading-relaxed max-w-2xl mx-auto">
+              Monitor your SMS campaigns, track performance metrics, and manage your contact list with powerful analytics.
+            </p>
+          </div>
 
-      {/* KPI Stats Grid */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-        <Card className="hover:shadow-lg transition-all duration-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Total SMS Sent</p>
-                <p className="text-3xl font-bold text-gray-900">{(smsMetrics.sent || smsMetrics.totalSent || 0).toLocaleString()}</p>
-                <div className="flex items-center mt-2">
-                  <span className="text-sm text-green-600 font-medium">{smsMetrics.delivered || 0} delivered</span>
+          {/* KPI Stats Grid */}
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+            <Card className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Total SMS Sent</p>
+                  <p className="text-3xl font-bold text-gray-900">{(smsMetrics.sent || smsMetrics.totalSent || 0).toLocaleString()}</p>
+                  <div className="flex items-center mt-2">
+                    <span className="text-sm text-green-600 font-medium">{smsMetrics.delivered || 0} delivered</span>
+                  </div>
+                </div>
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                  <div className="w-6 h-6 bg-primary rounded-md"></div>
                 </div>
               </div>
-              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-                <span className="text-2xl">📱</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </Card>
 
-        <Card className="hover:shadow-lg transition-all duration-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Delivery Rate</p>
-                <p className="text-3xl font-bold text-gray-900">
-                  {smsMetrics.deliveryRate 
-                    ? (typeof smsMetrics.deliveryRate === 'number' 
-                      ? `${smsMetrics.deliveryRate}%` 
-                      : smsMetrics.deliveryRate)
-                    : "0%"}
-                </p>
-                <div className="flex items-center mt-2">
-                  <span className={`text-sm font-medium ${smsMetrics.deliveryRate > 90 ? 'text-green-600' : 'text-red-600'}`}>
-                    {smsMetrics.failed || 0} failed
-                  </span>
+            <Card className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Delivery Rate</p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {smsMetrics.deliveryRate 
+                      ? (typeof smsMetrics.deliveryRate === 'number' 
+                        ? `${smsMetrics.deliveryRate}%` 
+                        : smsMetrics.deliveryRate)
+                      : "0%"}
+                  </p>
+                  <div className="flex items-center mt-2">
+                    <span className={`text-sm font-medium ${smsMetrics.deliveryRate > 90 ? 'text-green-600' : 'text-red-600'}`}>
+                      {smsMetrics.failed || 0} failed
+                    </span>
+                  </div>
+                </div>
+                <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center">
+                  <div className="w-6 h-6 bg-secondary rounded-md"></div>
                 </div>
               </div>
-              <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center">
-                <span className="text-2xl">✅</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </Card>
 
-        <Card className="hover:shadow-lg transition-all duration-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Total Contacts</p>
-                <p className="text-3xl font-bold text-gray-900">{(contactMetrics.total || 0).toLocaleString()}</p>
-                <div className="flex items-center mt-2">
-                  <span className="text-sm text-green-600 font-medium">{contactMetrics.optedIn || contactMetrics.subscribed || 0} opted in</span>
+            <Card className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Total Contacts</p>
+                  <p className="text-3xl font-bold text-gray-900">{(contactMetrics.total || 0).toLocaleString()}</p>
+                  <div className="flex items-center mt-2">
+                    <span className="text-sm text-green-600 font-medium">{contactMetrics.optedIn || contactMetrics.subscribed || 0} opted in</span>
+                  </div>
+                </div>
+                <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center">
+                  <div className="w-6 h-6 bg-accent rounded-md"></div>
                 </div>
               </div>
-              <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center">
-                <span className="text-2xl">👥</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </Card>
 
-        <Card className="hover:shadow-lg transition-all duration-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Wallet Balance</p>
-                <p className="text-3xl font-bold text-gray-900">${(walletBalance.balance || 0).toFixed(2)}</p>
-                <div className="flex items-center mt-2">
-                  <span className={`text-sm font-medium ${walletBalance.balance > 100 ? 'text-green-600' : 'text-yellow-600'}`}>
-                    {walletBalance.active ? "Active" : "Inactive"}
-                  </span>
+            <Card className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Wallet Balance</p>
+                  <p className="text-3xl font-bold text-gray-900">${(walletBalance.balance || 0).toFixed(2)}</p>
+                  <div className="flex items-center mt-2">
+                    <span className={`text-sm font-medium ${walletBalance.balance > 100 ? 'text-green-600' : 'text-yellow-600'}`}>
+                      {walletBalance.active ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                </div>
+                <div className="w-12 h-12 bg-neutral/10 rounded-xl flex items-center justify-center">
+                  <div className="w-6 h-6 bg-neutral rounded-md"></div>
                 </div>
               </div>
-              <div className="w-12 h-12 bg-neutral/10 rounded-xl flex items-center justify-center">
-                <span className="text-2xl">💰</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </Card>
+          </div>
+        </section>
 
-      {/* Recent Activity & System Health */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-8">
-        {/* Recent Activity */}
-        <Card className="hover:shadow-lg transition-all duration-200">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Recent Activity</CardTitle>
+        {/* Recent Activity & System Health - Sand Background */}
+        <section className="bg-neutral/5 py-16">
+          <div className="max-w-7xl mx-auto px-4 space-y-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-semibold text-gray-900 mb-4">Activity & System Health</h2>
+              <p className="text-base text-deep/90 leading-relaxed max-w-2xl mx-auto">
+                Monitor recent activity and system performance to ensure optimal SMS delivery.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-8">
+              {/* Recent Activity */}
+              <Card className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+                <div className="mb-4">
+                  <h3 className="text-2xl font-semibold text-gray-900 mb-2">Recent Activity</h3>
               <Button variant="outline" size="sm">
                 View All
               </Button>

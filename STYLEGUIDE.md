@@ -6,10 +6,54 @@ This style guide documents the complete design system for the Sendly Marketing A
 
 ### Design Philosophy
 - **Outseta-Inspired**: Clean, professional SaaS dashboard UI
-- **iOS 18 Patterns**: Soft depth, high polish, large rounded corners
+- **Typography-First**: Emphasis on clear typography over decorative elements
+- **Geometric Shapes**: Brand-colored shapes instead of emojis/icons
 - **Accessibility First**: WCAG AA compliance with proper contrast ratios
 - **Mobile-First**: Responsive design with touch-friendly interactions
 - **Consistent Spacing**: 8px grid system throughout
+
+---
+
+## 🎨 Visual Language
+
+### Typography-First Approach
+- **No decorative emojis**: Replaced with brand-colored geometric shapes
+- **Clear hierarchy**: Proper heading levels with consistent sizing
+- **Readable content**: High contrast text with proper line heights
+- **Professional appearance**: Clean, business-focused aesthetics
+
+### Geometric Shape System
+```jsx
+// Icon replacements using brand colors
+<div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+  <div className="w-6 h-6 bg-primary rounded-md"></div>
+</div>
+
+// Status indicators
+<div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+  <div className="w-4 h-4 bg-green-600 rounded-sm"></div>
+</div>
+```
+
+### Section Layout Patterns
+```jsx
+// Hero sections with centered content
+<section className="max-w-7xl mx-auto px-4 py-10 space-y-6">
+  <div className="text-center mb-12">
+    <h1 className="text-4xl font-bold text-gray-900 mb-4">Page Title</h1>
+    <p className="text-base text-deep/90 leading-relaxed max-w-2xl mx-auto">
+      Page description
+    </p>
+  </div>
+</section>
+
+// Alternating backgrounds
+<section className="bg-neutral/5 py-16">
+  <div className="max-w-7xl mx-auto px-4 space-y-6">
+    {/* Content */}
+  </div>
+</section>
+```
 
 ---
 
