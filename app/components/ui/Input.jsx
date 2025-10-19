@@ -18,7 +18,7 @@ const Input = forwardRef(({
     <input
       type={type}
       className={cn(
-        "flex h-11 w-full rounded-xl border bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 file:border-0 file:bg-transparent file:text-sm file:font-medium",
+        "flex h-11 w-full rounded-lg border bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-500 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 file:border-0 file:bg-transparent file:text-sm file:font-medium",
         variants[error ? "error" : "default"],
         className
       )}
@@ -62,7 +62,7 @@ const Textarea = forwardRef(({
   return (
     <textarea
       className={cn(
-        "flex min-h-[100px] w-full rounded-xl border bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 resize-y",
+        "flex min-h-[100px] w-full rounded-lg border bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-500 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 resize-y",
         variants[error ? "error" : "default"],
         className
       )}
@@ -89,7 +89,7 @@ const Select = forwardRef(({
   return (
     <select
       className={cn(
-        "flex h-11 w-full rounded-xl border bg-white px-4 py-3 text-sm text-gray-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50",
+        "flex h-11 w-full rounded-lg border bg-white px-4 py-3 text-sm text-gray-900 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50",
         variants[error ? "error" : "default"],
         className
       )}

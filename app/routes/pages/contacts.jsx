@@ -313,34 +313,42 @@ export default function ContactsPage() {
         {/* Stats Overview */}
         {stats.total !== undefined && (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-            <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-caption text-gray-600">Total Contacts</p>
-                <span className="text-2xl">👥</span>
-              </div>
-              <p className="text-h2 text-deep">{stats.total?.toLocaleString() || 0}</p>
-            </div>
-            <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-caption text-gray-600">Subscribed</p>
-                <span className="text-2xl">✅</span>
-              </div>
-              <p className="text-h2 text-primary">{stats.subscribed?.toLocaleString() || 0}</p>
-            </div>
-            <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-caption text-gray-600">Unsubscribed</p>
-                <span className="text-2xl">❌</span>
-              </div>
-              <p className="text-h2 text-danger">{stats.unsubscribed?.toLocaleString() || 0}</p>
-            </div>
-            <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-caption text-gray-600">Growth</p>
-                <span className="text-2xl">📈</span>
-              </div>
-              <p className="text-h2 text-secondary">{stats.growth || "+0%"}</p>
-            </div>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm text-gray-600">Total Contacts</p>
+                  <span className="text-2xl">👥</span>
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{stats.total?.toLocaleString() || 0}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm text-gray-600">Subscribed</p>
+                  <span className="text-2xl">✅</span>
+                </div>
+                <p className="text-2xl font-bold text-primary">{stats.subscribed?.toLocaleString() || 0}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm text-gray-600">Unsubscribed</p>
+                  <span className="text-2xl">❌</span>
+                </div>
+                <p className="text-2xl font-bold text-red-600">{stats.unsubscribed?.toLocaleString() || 0}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm text-gray-600">Growth</p>
+                  <span className="text-2xl">📈</span>
+                </div>
+                <p className="text-2xl font-bold text-secondary">{stats.growth || "+0%"}</p>
+              </CardContent>
+            </Card>
           </div>
         )}
 

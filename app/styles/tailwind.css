@@ -18,10 +18,10 @@
   }
 
   body {
-    font-family: var(--font-family-sans);
-    font-size: var(--text-base);
-    line-height: var(--leading-normal);
-    color: var(--color-ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #1F2937; /* text-gray-900 */
     background: linear-gradient(135deg, #F7F9F8 0%, #EAF5F3 100%);
     min-height: 100vh;
     margin: 0;
@@ -30,7 +30,7 @@
 
   /* Focus management */
   *:focus {
-    outline: 2px solid var(--color-brand);
+    outline: 2px solid #64D3C1; /* primary color */
     outline-offset: 2px;
   }
 
@@ -46,14 +46,14 @@
   /* Typography improvements */
   h1, h2, h3, h4, h5, h6 {
     font-weight: 600;
-    line-height: var(--leading-tight);
-    color: var(--color-ink);
+    line-height: 1.25;
+    color: #1F2937; /* text-gray-900 */
     margin: 0;
   }
 
   p {
     margin: 0;
-    line-height: var(--leading-normal);
+    line-height: 1.5;
   }
 
   /* Button and interactive element improvements */

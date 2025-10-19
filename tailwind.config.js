@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Brand Palette
+        // Brand Palette - Outseta Inspired
         primary: {
           DEFAULT: "#64D3C1",
           50: "#F0FDFA",

@@ -10,7 +10,7 @@ const Button = forwardRef(({
   children, 
   ...props 
 }, ref) => {
-  const baseClasses = "inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none touch-target";
+  const baseClasses = "inline-flex items-center justify-center font-medium transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none min-h-[44px] min-w-[44px]";
   
   const variants = {
     primary: "bg-primary text-white hover:bg-primary-600 active:scale-98 active:bg-primary-700 disabled:bg-primary-300 shadow-sm hover:shadow-md",
@@ -24,9 +24,9 @@ const Button = forwardRef(({
   };
   
   const sizes = {
-    sm: "h-9 px-3 text-sm rounded-lg",
-    md: "h-11 px-4 text-sm rounded-xl",
-    lg: "h-12 px-6 text-base rounded-xl",
+    sm: "h-9 px-3 text-sm rounded-md",
+    md: "h-11 px-4 text-sm rounded-lg",
+    lg: "h-12 px-6 text-base rounded-lg",
     xl: "h-14 px-8 text-lg rounded-2xl"
   };
   
