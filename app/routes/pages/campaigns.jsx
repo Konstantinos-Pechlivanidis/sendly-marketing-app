@@ -7,9 +7,12 @@ import { Select } from "../../components/ui/Select";
 import { Modal } from "../../components/ui/Modal";
 import { Badge } from "../../components/ui/Badge";
 import { Alert } from "../../components/ui/Alert";
-import { Card } from "../../components/ui/Card";
+import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/Card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/Tabs";
 import { LoadingSpinner } from "../../components/ui/LoadingSpinner";
+import { PageLayout, PageHeader, PageContent, PageSection } from "../../components/ui/PageLayout";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbSeparator } from "../../components/ui/Breadcrumb";
+import { ActionButton, ActionGroup } from "../../components/ui/ActionButton";
 import { api } from "../../utils/api.client";
 
 export default function CampaignsPage() {
@@ -190,7 +193,7 @@ export default function CampaignsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <PageLayout>
       {/* Alert */}
       {alert && (
         <div className="fixed top-4 right-4 z-50 max-w-md">
@@ -202,48 +205,92 @@ export default function CampaignsPage() {
         </div>
       )}
 
-      {/* iOS 18 Glass Header */}
-      <header className="glass-surface sticky top-0 z-10">
-        <div className="px-6 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-h1">Campaigns</h1>
-            <p className="text-caption mt-1">Manage your SMS marketing campaigns</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button 
+      {/* Page Header */}
+      <PageHeader
+        title="Campaigns"
+        subtitle="Manage your SMS marketing campaigns"
+        actions={
+          <ActionGroup>
+            <ActionButton 
               variant="outline" 
               onClick={() => setFilters({...filters, search: '', status: 'all'})}
-              className="rounded-xl"
             >
               🔍 Clear Filters
-            </Button>
-            <Button variant="primary" onClick={() => setIsModalOpen(true)} className="rounded-xl">
+            </ActionButton>
+            <ActionButton variant="primary" onClick={() => setIsModalOpen(true)}>
               + New Campaign
-            </Button>
-          </div>
-        </div>
-      </header>
+            </ActionButton>
+          </ActionGroup>
+        }
+      >
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb>
+          <BreadcrumbItem href="/app">Sendly</BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem isLast>Campaigns</BreadcrumbItem>
+        </Breadcrumb>
+      </PageHeader>
 
-      {/* Main Content */}
-      <main className="p-6 space-y-6">
+      {/* Page Content */}
+      <PageContent>
+        <PageSection>
         {/* Stats Overview */}
         {stats.totalCampaigns !== undefined && (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-            <Card>
-              <p className="text-caption text-gray-600 mb-1">Total Campaigns</p>
-              <p className="text-h2 text-deep">{stats.totalCampaigns || 0}</p>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-4 mb-8">
+            <Card className="hover:shadow-lg transition-all duration-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">Total Campaigns</p>
+                    <p className="text-3xl font-bold text-gray-900">{stats.totalCampaigns || 0}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-deep/10 rounded-xl flex items-center justify-center">
+                    <span className="text-2xl">📊</span>
+                  </div>
+                </div>
+              </CardContent>
             </Card>
-            <Card>
-              <p className="text-caption text-gray-600 mb-1">Active</p>
-              <p className="text-h2 text-primary">{stats.active || 0}</p>
+            
+            <Card className="hover:shadow-lg transition-all duration-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">Active</p>
+                    <p className="text-3xl font-bold text-primary">{stats.active || 0}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                    <span className="text-2xl">🚀</span>
+                  </div>
+                </div>
+              </CardContent>
             </Card>
-            <Card>
-              <p className="text-caption text-gray-600 mb-1">Scheduled</p>
-              <p className="text-h2 text-secondary">{stats.scheduled || 0}</p>
+            
+            <Card className="hover:shadow-lg transition-all duration-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">Scheduled</p>
+                    <p className="text-3xl font-bold text-secondary">{stats.scheduled || 0}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center">
+                    <span className="text-2xl">⏰</span>
+                  </div>
+                </div>
+              </CardContent>
             </Card>
-            <Card>
-              <p className="text-caption text-gray-600 mb-1">Completed</p>
-              <p className="text-h2 text-deep">{stats.completed || 0}</p>
+            
+            <Card className="hover:shadow-lg transition-all duration-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">Completed</p>
+                    <p className="text-3xl font-bold text-green-600">{stats.completed || 0}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                    <span className="text-2xl">✅</span>
+                  </div>
+                </div>
+              </CardContent>
             </Card>
           </div>
         )}
@@ -617,6 +664,8 @@ export default function CampaignsPage() {
           </div>
         )}
       </Modal>
-    </div>
+        </PageSection>
+      </PageContent>
+    </PageLayout>
   );
 }
