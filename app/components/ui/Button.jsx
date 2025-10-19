@@ -10,17 +10,17 @@ const Button = forwardRef(({
   children, 
   ...props 
 }, ref) => {
-  const baseClasses = "inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand/50 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none touch-target";
+  const baseClasses = "inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none touch-target";
   
   const variants = {
-    primary: "bg-brand text-white hover:bg-brand-hover active:scale-98 active:bg-brand-active disabled:bg-brand-disabled shadow-sm hover:shadow-md",
-    secondary: "bg-secondary text-white hover:bg-secondary-hover active:scale-98 active:bg-secondary-active disabled:bg-secondary-disabled shadow-sm hover:shadow-md",
-    danger: "bg-negative text-white hover:bg-negative-hover active:scale-98 active:bg-negative-active disabled:bg-negative-disabled shadow-sm hover:shadow-md",
-    outline: "border border-brand text-brand hover:bg-brand hover:text-white active:scale-98 active:bg-brand-active disabled:border-brand-disabled disabled:text-brand-disabled",
-    ghost: "text-brand hover:bg-brand/10 active:scale-98 active:bg-brand/20 disabled:text-brand-disabled",
-    link: "text-brand underline-offset-4 hover:underline disabled:text-brand-disabled",
-    neutral: "bg-neutral text-white hover:bg-neutral-hover active:scale-98 active:bg-neutral-active disabled:bg-neutral-disabled shadow-sm hover:shadow-md",
-    accent: "bg-accent text-white hover:bg-accent-hover active:scale-98 active:bg-accent-active disabled:bg-accent-disabled shadow-sm hover:shadow-md"
+    primary: "bg-primary text-white hover:bg-primary-600 active:scale-98 active:bg-primary-700 disabled:bg-primary-300 shadow-sm hover:shadow-md",
+    secondary: "bg-secondary text-white hover:bg-secondary-600 active:scale-98 active:bg-secondary-700 disabled:bg-secondary-300 shadow-sm hover:shadow-md",
+    danger: "bg-danger text-white hover:bg-danger-600 active:scale-98 active:bg-danger-700 disabled:bg-danger-300 shadow-sm hover:shadow-md",
+    outline: "border border-primary text-primary hover:bg-primary hover:text-white active:scale-98 active:bg-primary-700 disabled:border-primary-300 disabled:text-primary-300",
+    ghost: "text-primary hover:bg-primary/10 active:scale-98 active:bg-primary/20 disabled:text-primary-300",
+    link: "text-primary underline-offset-4 hover:underline disabled:text-primary-300",
+    neutral: "bg-neutral text-white hover:bg-neutral-600 active:scale-98 active:bg-neutral-700 disabled:bg-neutral-300 shadow-sm hover:shadow-md",
+    accent: "bg-accent text-white hover:bg-accent-600 active:scale-98 active:bg-accent-700 disabled:bg-accent-300 shadow-sm hover:shadow-md"
   };
   
   const sizes = {

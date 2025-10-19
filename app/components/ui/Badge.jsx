@@ -9,17 +9,17 @@ const Badge = forwardRef(({
   ...props 
 }, ref) => {
   const variants = {
-    default: 'bg-muted text-ink-secondary',
-    primary: 'bg-brand/10 text-brand',
+    default: 'bg-gray-100 text-gray-600',
+    primary: 'bg-primary/10 text-primary',
     secondary: 'bg-secondary/10 text-secondary',
     accent: 'bg-accent/10 text-accent',
     neutral: 'bg-neutral/10 text-neutral-700',
-    positive: 'bg-positive/10 text-positive',
-    warning: 'bg-warning/10 text-warning',
-    negative: 'bg-negative/10 text-negative',
-    success: 'bg-positive/10 text-positive',
-    danger: 'bg-negative/10 text-negative',
-    info: 'bg-brand/10 text-brand',
+    positive: 'bg-green-100 text-green-700',
+    warning: 'bg-yellow-100 text-yellow-700',
+    negative: 'bg-red-100 text-red-700',
+    success: 'bg-green-100 text-green-700',
+    danger: 'bg-red-100 text-red-700',
+    info: 'bg-blue-100 text-blue-700',
   };
 
   const sizes = {
