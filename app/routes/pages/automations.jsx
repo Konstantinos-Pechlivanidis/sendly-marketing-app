@@ -516,7 +516,6 @@ export default function AutomationsPage() {
             </div>
           </Card>
         )}
-      </main>
 
       {/* Create Automation Modal */}
       <Modal
