@@ -7,9 +7,12 @@ import { Select } from "../../components/ui/Select";
 import { Badge } from "../../components/ui/Badge";
 import { Pagination } from "../../components/ui/Pagination";
 import { Alert } from "../../components/ui/Alert";
-import { Card } from "../../components/ui/Card";
+import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/Card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/Tabs";
 import { LoadingSpinner } from "../../components/ui/LoadingSpinner";
+import { PageLayout, PageHeader, PageContent, PageSection } from "../../components/ui/PageLayout";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbSeparator } from "../../components/ui/Breadcrumb";
+import { ActionButton, ActionGroup } from "../../components/ui/ActionButton";
 import { api } from "../../utils/api.client";
 
 export default function ContactsPage() {
@@ -244,7 +247,7 @@ export default function ContactsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-background">
+    <PageLayout>
       {/* Alert */}
       {alert && (
         <div className="fixed top-4 right-4 z-50 max-w-md">
@@ -256,56 +259,57 @@ export default function ContactsPage() {
         </div>
       )}
 
-      {/* Header */}
-      <header className="glass-surface sticky top-0 z-10">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-h1">Contacts</h1>
-              <p className="text-caption mt-1">Manage your SMS subscriber list</p>
-            </div>
-            <div className="flex items-center gap-3">
-              {selectedContacts.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <Badge variant="info" size="sm">
-                    {selectedContacts.length} selected
-                  </Badge>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={handleBulkDelete}
-                    disabled={loading}
-                    className="rounded-lg"
-                  >
-                    {loading ? <LoadingSpinner size="sm" /> : "🗑️"} Delete Selected
-                  </Button>
-                </div>
-              )}
-              <Button 
-                variant="outline" 
-                onClick={handleExportContacts}
-                disabled={loading}
-                className="rounded-xl"
-              >
-                {loading ? <LoadingSpinner size="sm" /> : "📤"} Export
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setIsImportModalOpen(true)}
-                className="rounded-xl"
-              >
-                📥 Import
-              </Button>
-              <Button variant="primary" onClick={openCreateModal} className="rounded-xl">
-                + Add Contact
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Page Header */}
+      <PageHeader
+        title="Contacts"
+        subtitle="Manage your SMS subscriber list"
+        actions={
+          <ActionGroup>
+            {selectedContacts.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Badge variant="info" size="sm">
+                  {selectedContacts.length} selected
+                </Badge>
+                <ActionButton 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleBulkDelete}
+                  disabled={loading}
+                >
+                  {loading ? <LoadingSpinner size="sm" /> : "🗑️"} Delete Selected
+                </ActionButton>
+              </div>
+            )}
+            <ActionButton 
+              variant="outline" 
+              onClick={handleExportContacts}
+              disabled={loading}
+            >
+              {loading ? <LoadingSpinner size="sm" /> : "📤"} Export
+            </ActionButton>
+            <ActionButton 
+              variant="outline" 
+              onClick={() => setIsImportModalOpen(true)}
+            >
+              📥 Import
+            </ActionButton>
+            <ActionButton variant="primary" onClick={openCreateModal}>
+              + Add Contact
+            </ActionButton>
+          </ActionGroup>
+        }
+      >
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb>
+          <BreadcrumbItem href="/app">Sendly</BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem isLast>Contacts</BreadcrumbItem>
+        </Breadcrumb>
+      </PageHeader>
 
-      {/* Main Content */}
-      <main className="p-6 space-y-6">
+      {/* Page Content */}
+      <PageContent>
+        <PageSection>
         {/* Stats Overview */}
         {stats.total !== undefined && (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -732,7 +736,9 @@ Jane,Smith,+1234567891,jane@example.com,female,1985-05-15,opted_in`}
           </div>
         </div>
       </Modal>
-    </div>
+        </PageSection>
+      </PageContent>
+    </PageLayout>
   );
 }
 
