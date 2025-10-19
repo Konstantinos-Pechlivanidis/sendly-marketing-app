@@ -9,7 +9,7 @@ const Input = forwardRef(({
   ...props 
 }, ref) => {
   const variants = {
-    default: "border-gray-300 focus:border-brand focus:ring-brand/20",
+    default: "border-gray-300 focus:border-primary focus:ring-primary/20",
     error: "border-red-500 focus:border-red-500 focus:ring-red-500/20",
     success: "border-green-500 focus:border-green-500 focus:ring-green-500/20",
   };
@@ -54,7 +54,7 @@ const Textarea = forwardRef(({
   ...props 
 }, ref) => {
   const variants = {
-    default: "border-gray-300 focus:border-brand focus:ring-brand/20",
+    default: "border-gray-300 focus:border-primary focus:ring-primary/20",
     error: "border-red-500 focus:border-red-500 focus:ring-red-500/20",
     success: "border-green-500 focus:border-green-500 focus:ring-green-500/20",
   };
@@ -81,7 +81,7 @@ const Select = forwardRef(({
   ...props 
 }, ref) => {
   const variants = {
-    default: "border-gray-300 focus:border-brand focus:ring-brand/20",
+    default: "border-gray-300 focus:border-primary focus:ring-primary/20",
     error: "border-red-500 focus:border-red-500 focus:ring-red-500/20",
     success: "border-green-500 focus:border-green-500 focus:ring-green-500/20",
   };
