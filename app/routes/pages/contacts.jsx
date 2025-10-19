@@ -14,7 +14,6 @@ import { api } from "../../utils/api.client";
 
 export default function ContactsPage() {
   const data = useLoaderData();
-  const fetcher = useFetcher();
   const [contacts, setContacts] = useState([]);
   const [alert, setAlert] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);

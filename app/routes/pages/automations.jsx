@@ -13,7 +13,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/Ta
 
 export default function AutomationsPage() {
   const data = useLoaderData();
-  const fetcher = useFetcher();
   
   const automations = data?.automations?.items || [];
   const stats = data?.stats || {};

@@ -13,7 +13,6 @@ import { Textarea } from "../../components/ui/Textarea";
 
 export default function SettingsPage() {
   const data = useLoaderData();
-  const fetcher = useFetcher();
   
   const balance = data?.balance || {};
   const transactions = data?.transactions?.items || [];

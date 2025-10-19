@@ -14,7 +14,6 @@ import { api } from "../../utils/api.client";
 
 export default function CampaignsPage() {
   const data = useLoaderData();
-  const fetcher = useFetcher();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);

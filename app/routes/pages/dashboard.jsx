@@ -15,7 +15,6 @@ import { api } from "../../utils/api.client";
 export default function DashboardPage() {
   console.log("🎨 DASHBOARD COMPONENT RENDERING!");
   const data = useLoaderData();
-  const fetcher = useFetcher();
   console.log("📊 Dashboard data received:", data);
   const [mounted, setMounted] = useState(false);
   const [refreshing, setRefreshing] = useState(false);

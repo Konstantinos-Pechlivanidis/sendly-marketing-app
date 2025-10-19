@@ -12,7 +12,6 @@ import { Modal } from "../../components/ui/Modal";
 
 export default function ReportsPage() {
   const data = useLoaderData();
-  const fetcher = useFetcher();
   
   const overview = data?.overview?.data || {};
   const campaigns = data?.campaigns?.data || {};

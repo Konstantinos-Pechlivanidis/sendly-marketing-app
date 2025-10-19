@@ -14,7 +14,6 @@ import { api } from "../../utils/api.client";
 
 export default function TemplatesPage() {
   const data = useLoaderData();
-  const fetcher = useFetcher();
   const [alert, setAlert] = useState(null);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
