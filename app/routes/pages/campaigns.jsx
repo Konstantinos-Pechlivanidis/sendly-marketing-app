@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useLoaderData } from "react-router";
 import { useState, useEffect } from "react";
 import { Button } from "../../components/ui/Button";
@@ -13,6 +14,7 @@ import { LoadingSpinner } from "../../components/ui/LoadingSpinner";
 import { PageLayout, PageHeader, PageContent, PageSection } from "../../components/ui/PageLayout";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbSeparator } from "../../components/ui/Breadcrumb";
 import { ActionButton, ActionGroup } from "../../components/ui/ActionButton";
+import { Icon } from "../../components/ui/Icon";
 import { api } from "../../utils/api.client";
 
 export default function CampaignsPage() {
@@ -30,7 +32,7 @@ export default function CampaignsPage() {
     sortBy: 'createdAt',
     sortOrder: 'desc'
   });
-  
+
   // Form state
   const [formData, setFormData] = useState({
     name: '',
@@ -38,7 +40,8 @@ export default function CampaignsPage() {
     audienceId: 'aud_all_consented',
     discountId: '',
     scheduleType: 'immediate',
-    scheduleAt: ''
+    scheduleAt: '',
+    recurringDays: ''
   });
 
   // Adapt to backend response structure
@@ -59,8 +62,37 @@ export default function CampaignsPage() {
   };
 
   const handleCreateCampaign = async () => {
+    // Build payload as per backend API
+    const payload = {
+      name: formData.name,
+      message: formData.message
+    };
+    // Audience
+    if (formData.audienceId && formData.audienceId !== '') {
+      // Convert to API model: expects audience, not audienceId
+      if (formData.audienceId.startsWith('segment:') || ["all","male","female","men","women"].includes(formData.audienceId)) {
+        payload.audience = formData.audienceId;
+      }
+    }
+    if (formData.discountId) {
+      payload.discountId = formData.discountId;
+    }
+    if (formData.scheduleType === 'scheduled' && formData.scheduleAt) {
+      payload.scheduleType = 'scheduled';
+      payload.scheduleAt = formData.scheduleAt;
+    }
+    if (formData.scheduleType === 'recurring' && formData.recurringDays) {
+      payload.scheduleType = 'recurring';
+      payload.recurringDays = Number(formData.recurringDays);
+    }
+    // "immediate" is default; don't need to send that unless explicit.
+    if (formData.scheduleType === 'immediate') {
+      payload.scheduleType = 'immediate';
+    }
     try {
-      await api.campaigns.create(formData);
+      console.log('[CAMPAIGN CREATE] Sending payload:', payload);
+      const resp = await api.campaigns.create(payload);
+      console.log('[CAMPAIGN CREATE] Response:', resp);
       setAlert({ type: 'success', message: 'Campaign created successfully!' });
       setIsModalOpen(false);
       setFormData({
@@ -69,18 +101,19 @@ export default function CampaignsPage() {
         audienceId: 'aud_all_consented',
         discountId: '',
         scheduleType: 'immediate',
-        scheduleAt: ''
+        scheduleAt: '',
+        recurringDays: ''
       });
-      // Refresh the page
       window.location.reload();
     } catch (error) {
+      console.error('[CAMPAIGN CREATE ERROR]', error);
       setAlert({ type: 'error', message: `Failed to create campaign: ${error.message}` });
     }
   };
 
   const handleSendCampaign = async (campaignId) => {
     if (!confirm('Are you sure you want to send this campaign now?')) return;
-    
+
     try {
       await api.campaigns.send(campaignId);
       setAlert({ type: 'success', message: 'Campaign sent successfully!' });
@@ -106,7 +139,7 @@ export default function CampaignsPage() {
 
   const handleDeleteCampaign = async (campaignId) => {
     if (!confirm('Are you sure you want to delete this campaign?')) return;
-    
+
     try {
       await api.campaigns.delete(campaignId);
       setAlert({ type: 'success', message: 'Campaign deleted successfully!' });
@@ -131,7 +164,7 @@ export default function CampaignsPage() {
 
   const handleCancelCampaign = async (campaignId) => {
     if (!confirm('Are you sure you want to cancel this campaign?')) return;
-    
+
     setLoading(true);
     try {
       await api.campaigns.cancel(campaignId);
@@ -211,14 +244,18 @@ export default function CampaignsPage() {
         subtitle="Manage your SMS marketing campaigns"
         actions={
           <ActionGroup>
-            <ActionButton 
-              variant="outline" 
-              onClick={() => setFilters({...filters, search: '', status: 'all'})}
+            <ActionButton
+              variant="outline"
+              onClick={() => setFilters({ ...filters, search: '', status: 'all' })}
             >
+              {/* CHANGED: Added Icon */}
+              <Icon name="close" size="sm" className="mr-2" />
               Clear Filters
             </ActionButton>
             <ActionButton variant="primary" onClick={() => setIsModalOpen(true)}>
-              + New Campaign
+              {/* CHANGED: Replaced + with Icon */}
+              <Icon name="plus" size="sm" className="mr-2" />
+              New Campaign
             </ActionButton>
           </ActionGroup>
         }
@@ -233,261 +270,294 @@ export default function CampaignsPage() {
 
       {/* Page Content */}
       <PageContent>
-        <PageSection>
+        {/* CHANGED: Removed the redundant hero <section> and <h1>.
+          The PageHeader above already provides the title.
+        */}
+
         {/* Stats Overview */}
-        {stats.totalCampaigns !== undefined && (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-4 mb-8">
-            <Card className="hover:shadow-lg transition-all duration-200">
-              <CardContent className="p-6">
+        {/* CHANGED: Wrapped in PageSection for consistent padding */}
+        <PageSection>
+          {stats.totalCampaigns !== undefined && (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+              <Card className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 mb-1">Total Campaigns</p>
                     <p className="text-3xl font-bold text-gray-900">{stats.totalCampaigns || 0}</p>
                   </div>
                   <div className="w-12 h-12 bg-deep/10 rounded-xl flex items-center justify-center">
-                    <div className="w-6 h-6 bg-deep rounded-md"></div>
+                    <Icon name="campaign" size="lg" className="text-deep" />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="hover:shadow-lg transition-all duration-200">
-              <CardContent className="p-6">
+              </Card>
+
+              <Card className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 mb-1">Active</p>
                     <p className="text-3xl font-bold text-primary">{stats.active || 0}</p>
                   </div>
                   <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-                    <div className="w-6 h-6 bg-primary rounded-md"></div>
+                    <Icon name="chart" size="lg" className="text-primary" />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="hover:shadow-lg transition-all duration-200">
-              <CardContent className="p-6">
+              </Card>
+
+              <Card className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 mb-1">Scheduled</p>
                     <p className="text-3xl font-bold text-secondary">{stats.scheduled || 0}</p>
                   </div>
                   <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center">
-                    <div className="w-6 h-6 bg-secondary rounded-md"></div>
+                    <Icon name="clock" size="lg" className="text-secondary" />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="hover:shadow-lg transition-all duration-200">
-              <CardContent className="p-6">
+              </Card>
+
+              <Card className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 mb-1">Completed</p>
                     <p className="text-3xl font-bold text-green-600">{stats.completed || 0}</p>
                   </div>
                   <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                    <div className="w-6 h-6 bg-green-600 rounded-md"></div>
+                    <Icon name="success" size="lg" className="text-green-600" />
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Filters */}
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-h3">Filters & Search</h2>
-            <Badge variant="info" size="sm">
-              {campaigns.length} campaigns
-            </Badge>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Input
-              label="Search Campaigns"
-              value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              placeholder="Search by name or content..."
-            />
-            
-            <Select
-              label="Status"
-              value={filters.status}
-              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-              options={[
-                { value: 'all', label: 'All Campaigns' },
-                { value: 'draft', label: 'Draft' },
-                { value: 'scheduled', label: 'Scheduled' },
-                { value: 'sending', label: 'Sending' },
-                { value: 'sent', label: 'Sent' },
-                { value: 'failed', label: 'Failed' },
-                { value: 'cancelled', label: 'Cancelled' },
-              ]}
-            />
-
-            <Select
-              label="Sort by"
-              value={filters.sortBy}
-              onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
-              options={[
-                { value: 'createdAt', label: 'Date Created' },
-                { value: 'name', label: 'Name' },
-                { value: 'scheduleAt', label: 'Schedule Date' },
-                { value: 'status', label: 'Status' },
-              ]}
-            />
-          </div>
-        </Card>
-
-        {/* Campaigns List */}
-        {campaigns.length > 0 ? (
-          <div className="grid grid-cols-1 gap-6">
-            {campaigns.map((campaign) => (
-              <Card key={campaign.id} className="hover:shadow-elevated transition-all duration-200">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h2 className="text-h3">{campaign.name}</h2>
-                      <Badge variant={getStatusBadgeVariant(campaign.status)}>
-                        {campaign.status || 'Draft'}
-                      </Badge>
-                      {campaign.scheduleAt && campaign.status === 'scheduled' && (
-                        <Badge variant="info" size="sm">
-                          📅 {formatDate(campaign.scheduleAt)}
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-caption">
-                      Created {formatDate(campaign.createdAt)}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    {campaign.metrics && (
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium text-deep">
-                          {campaign.metrics.sent?.toLocaleString() || 0} sent
-                        </p>
-                        <p className="text-caption text-gray-600">
-                          {campaign.metrics.deliveryRate || '0%'} delivered
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="bg-muted rounded-lg p-4 mb-4">
-                  <p className="text-body">{campaign.content || campaign.message}</p>
-                </div>
-
-                {campaign.audience && (
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="text-caption text-gray-600">Target:</span>
-                    <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-lg">
-                      {campaign.audience.type || 'All'} ({campaign.audience.count || 0} contacts)
-                    </span>
-                  </div>
-                )}
-
-                <div className="flex flex-wrap gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="rounded-lg"
-                    onClick={() => handlePreviewCampaign(campaign.id)}
-                    disabled={loading}
-                  >
-                    👁️ Preview
-                  </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="rounded-lg"
-                    onClick={() => handleGetAudience(campaign.id)}
-                    disabled={loading}
-                  >
-                    👥 Audience
-                  </Button>
-
-                  {campaign.status === 'draft' && (
-                    <>
-                      <Button 
-                        variant="primary" 
-                        size="sm" 
-                        className="rounded-lg"
-                        onClick={() => handleSendCampaign(campaign.id)}
-                        disabled={loading}
-                      >
-                        📤 Send Now
-                      </Button>
-                      <Button 
-                        variant="secondary" 
-                        size="sm" 
-                        className="rounded-lg"
-                        onClick={() => openScheduleModal(campaign)}
-                      >
-                        ⏱️ Schedule
-                      </Button>
-                    </>
-                  )}
-                  
-                  {campaign.status === 'scheduled' && (
-                    <>
-                      <Button 
-                        variant="secondary" 
-                        size="sm" 
-                        className="rounded-lg"
-                        onClick={() => openScheduleModal(campaign)}
-                      >
-                        ⏱️ Reschedule
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="rounded-lg text-orange-600 border-orange-300 hover:bg-orange-50"
-                        onClick={() => handleCancelCampaign(campaign.id)}
-                        disabled={loading}
-                      >
-                        ⏹️ Cancel
-                      </Button>
-                    </>
-                  )}
-
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="rounded-lg"
-                    onClick={() => handleDuplicateCampaign(campaign.id)}
-                    disabled={loading}
-                  >
-                    📋 Duplicate
-                  </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="rounded-lg text-red-600 border-red-300 hover:bg-red-50"
-                    onClick={() => handleDeleteCampaign(campaign.id)}
-                  >
-                    🗑️ Delete
-                  </Button>
                 </div>
               </Card>
-        ))}
-      </div>
-        ) : (
-          <div className="bg-surface rounded-xl shadow-subtle border border-border p-12 text-center">
-            <div className="max-w-md mx-auto">
-              <span className="text-6xl">📱</span>
-              <h3 className="text-h3 mt-4 mb-2">No campaigns yet</h3>
-              <p className="text-caption mb-6">Create your first SMS campaign to get started</p>
-              <Button variant="primary" onClick={() => setIsModalOpen(true)} className="rounded-xl">
-                Create Campaign
-              </Button>
             </div>
+          )}
+        </PageSection>
+
+        {/* Filters Section - Sand Background */}
+        {/* CHANGED: Replaced <section> with <PageSection> */}
+        <PageSection className="py-16">
+          <div className="space-y-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-semibold text-gray-900 mb-4">Campaign Management</h2>
+              <p className="text-base text-deep/90 leading-relaxed max-w-2xl mx-auto">
+                Filter and manage your SMS campaigns with powerful search and status controls.
+              </p>
+            </div>
+
+            <Card className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+              <div className="mb-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-2xl font-semibold text-gray-900">Filters & Search</h3>
+                  <Badge variant="info" size="sm">
+                    {campaigns.length} campaigns
+                  </Badge>
+                </div>
+              </div>
+              <div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="lg:col-span-1">
+                    <Label htmlFor="SearchCampaigns">Search Campaigns</Label>
+                    <Input
+                      id="SearchCampaigns"
+                      label="Search Campaigns"
+                      value={filters.search}
+                      onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                      placeholder="Search by name or content..."
+                    />
+                  </div>
+                  <Select
+                    label="Status"
+                    value={filters.status}
+                    onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                    options={[
+                      { value: 'all', label: 'All Campaigns' },
+                      { value: 'draft', label: 'Draft' },
+                      { value: 'scheduled', label: 'Scheduled' },
+                      { value: 'sending', label: 'Sending' },
+                      { value: 'sent', label: 'Sent' },
+                      { value: 'failed', label: 'Failed' },
+                      { value: 'cancelled', label: 'Cancelled' },
+                    ]}
+                  />
+
+                  <Select
+                    label="Sort by"
+                    value={filters.sortBy}
+                    onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
+                    options={[
+                      { value: 'createdAt', label: 'Date Created' },
+                      { value: 'name', label: 'Name' },
+                      { value: 'scheduleAt', label: 'Schedule Date' },
+                      { value: 'status', label: 'Status' },
+                    ]}
+                  />
+                </div>
+              </div>
+            </Card>
           </div>
-        )}
+        </PageSection>
+
+        {/* Campaigns List */}
+        {/* CHANGED: Replaced <section> with <PageSection> */}
+        <PageSection>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-semibold text-gray-900 mb-4">Your Campaigns</h2>
+            <p className="text-base text-deep/90 leading-relaxed max-w-2xl mx-auto">
+              Manage and track all your SMS marketing campaigns in one place.
+            </p>
+          </div>
+
+          {campaigns.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6">
+              {campaigns.map((campaign) => (
+                <Card key={campaign.id} className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-2xl font-semibold text-gray-900">{campaign.name}</h3>
+                        <Badge variant={getStatusBadgeVariant(campaign.status)}>
+                          {campaign.status || 'Draft'}
+                        </Badge>
+                        {campaign.scheduleAt && campaign.status === 'scheduled' && (
+                          <Badge variant="info" size="sm" className="flex items-center">
+                            {/* CHANGED: Replaced emoji with Icon */}
+                            <Icon name="calendar" size="sm" className="mr-1" /> {formatDate(campaign.scheduleAt)}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-caption">
+                        Created {formatDate(campaign.createdAt)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      {campaign.metrics && (
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-deep">
+                            {campaign.metrics.sent?.toLocaleString() || 0} sent
+                          </p>
+                          <p className="text-caption text-gray-600">
+                            {campaign.metrics.deliveryRate || '0%'} delivered
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-muted rounded-lg p-4 mb-4">
+                    <p className="text-body">{campaign.content || campaign.message}</p>
+                  </div>
+
+                  {campaign.audience && (
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="text-caption text-gray-600">Target:</span>
+                      <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-lg">
+                        {campaign.audience.type || 'All'} ({campaign.audience.count || 0} contacts)
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-lg"
+                      onClick={() => handlePreviewCampaign(campaign.id)}
+                      disabled={loading}
+                    >
+                      <Icon name="search" size="sm" className="mr-2" /> Preview
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-lg"
+                      onClick={() => handleGetAudience(campaign.id)}
+                      disabled={loading}
+                    >
+                      <Icon name="users" size="sm" className="mr-2" /> Audience
+                    </Button>
+
+                    {campaign.status === 'draft' && (
+                      <>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          className="rounded-lg"
+                          onClick={() => handleSendCampaign(campaign.id)}
+                          disabled={loading}
+                        >
+                          <Icon name="arrowRight" size="sm" className="mr-2" /> Send Now
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="rounded-lg"
+                          onClick={() => openScheduleModal(campaign)}
+                        >
+                          <Icon name="clock" size="sm" className="mr-2" /> Schedule
+                        </Button>
+                      </>
+                    )}
+
+                    {campaign.status === 'scheduled' && (
+                      <>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="rounded-lg"
+                          onClick={() => openScheduleModal(campaign)}
+                        >
+                          <Icon name="clock" size="sm" className="mr-2" /> Reschedule
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-lg text-orange-600 border-orange-300 hover:bg-orange-50"
+                          onClick={() => handleCancelCampaign(campaign.id)}
+                          disabled={loading}
+                        >
+                          <Icon name="close" size="sm" className="mr-2" /> Cancel
+                        </Button>
+                      </>
+                    )}
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-lg"
+                      onClick={() => handleDuplicateCampaign(campaign.id)}
+                      disabled={loading}
+                    >
+                      <Icon name="copy" size="sm" className="mr-2" /> Duplicate
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-lg text-red-600 border-red-300 hover:bg-red-50"
+                      onClick={() => handleDeleteCampaign(campaign.id)}
+                    >
+                      <Icon name="trash" size="sm" className="mr-2" /> Delete
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="bg-white rounded-xl p-12 shadow-sm text-center">
+              <div className="max-w-md mx-auto">
+                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Icon name="campaign" size="2xl" className="text-primary" />
+                </div>
+                <h3 className="text-2xl font-semibold text-gray-900 mt-4 mb-2">No campaigns yet</h3>
+                <p className="text-base text-gray-600 mb-6">Create your first SMS campaign to get started</p>
+                <Button variant="primary" onClick={() => setIsModalOpen(true)} className="rounded-xl">
+                  {/* CHANGED: Added Icon */}
+                  <Icon name="plus" size="sm" className="mr-2" />
+                  Create Campaign
+                </Button>
+              </div>
+            </Card>
+          )}
+        </PageSection>
+      </PageContent>
 
       {/* Create Campaign Modal */}
       <Modal
@@ -500,11 +570,13 @@ export default function CampaignsPage() {
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              variant="primary" 
+            <Button
+              variant="primary"
               onClick={handleCreateCampaign}
               disabled={!formData.name || !formData.message}
             >
+              {/* CHANGED: Added Icon */}
+              <Icon name="plus" size="sm" className="mr-2" />
               Create Campaign
             </Button>
           </>
@@ -517,7 +589,7 @@ export default function CampaignsPage() {
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             placeholder="e.g. Back to School Sale"
           />
-          
+
           <Textarea
             label="SMS Message"
             value={formData.message}
@@ -526,7 +598,7 @@ export default function CampaignsPage() {
             rows={4}
             maxLength={160}
           />
-          
+
           <Select
             label="Target Audience"
             value={formData.audienceId}
@@ -559,11 +631,13 @@ export default function CampaignsPage() {
             <Button variant="outline" onClick={() => setIsScheduleModalOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              variant="primary" 
+            <Button
+              variant="primary"
               onClick={handleScheduleCampaign}
               disabled={!formData.scheduleAt}
             >
+              {/* CHANGED: Added Icon */}
+              <Icon name="clock" size="sm" className="mr-2" />
               Schedule
             </Button>
           </>
@@ -573,7 +647,7 @@ export default function CampaignsPage() {
           <p className="text-gray-600">
             Schedule <strong>{selectedCampaign?.name}</strong> to be sent at a specific time.
           </p>
-          
+
           <Input
             label="Schedule Date & Time"
             type="datetime-local"
@@ -601,6 +675,12 @@ export default function CampaignsPage() {
                 handleSendCampaign(selectedCampaign.id);
               }
             }}>
+              {/* CHANGED: Added conditional icons */}
+              {selectedCampaign?.status === 'draft' ? (
+                <Icon name="arrowRight" size="sm" className="mr-2" />
+              ) : (
+                <Icon name="search" size="sm" className="mr-2" />
+              )}
               {selectedCampaign?.status === 'draft' ? 'Send Campaign' : 'View Details'}
             </Button>
           </>
@@ -663,8 +743,6 @@ export default function CampaignsPage() {
           </div>
         )}
       </Modal>
-        </PageSection>
-      </PageContent>
     </PageLayout>
   );
 }

@@ -1,4 +1,4 @@
-import { Outlet, useLoaderData, useRouteError, Link as RouterLink } from "react-router";
+import { Outlet, useLoaderData, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider } from "@shopify/shopify-app-react-router/react";
 import { authenticate } from "../shopify.server";
@@ -44,5 +44,3 @@ export function ErrorBoundary() {
 export const headers = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
-
-// keep RouterLink import for compatibility with Shopify boundary

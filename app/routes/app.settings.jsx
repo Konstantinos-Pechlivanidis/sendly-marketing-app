@@ -6,41 +6,39 @@ export const loader = async ({ request }) => {
   try {
     const { session } = await authenticate.admin(request);
 
-    const [balance, transactions, packages, settings, contactStats, systemHealth] = await Promise.all([
-      serverApi.get(request, "/api/billing/balance").catch(() => ({ data: {} })),
-      serverApi.get(request, "/api/billing/transactions").catch(() => ({ data: [] })),
-      serverApi.get(request, "/api/billing/packages").catch(() => ({ data: [] })),
-      serverApi.get(request, "/api/settings").catch(() => ({ data: {} })),
-      serverApi.get(request, "/api/contacts/stats").catch(() => ({ data: {} })),
-      serverApi.get(request, "/health").catch(() => ({ data: {} })), // Re-using /health for system health
+    const [balance, transactions, packages, settings] = await Promise.all([
+      serverApi.get(request, "/billing/balance").catch(() => ({ success: false, data: {} })),
+      serverApi.get(request, "/billing/history").catch(() => ({ success: false, data: { transactions: [], pagination: {} } })),
+      serverApi.get(request, "/billing/packages").catch(() => ({ success: false, data: [] })),
+      serverApi.get(request, "/settings").catch(() => ({ success: false, data: {} })),
     ]);
     
+    // Backend returns { success: true, data: {...} }
+    // eslint-disable-next-line no-undef
+    const isDevelopment = process.env.NODE_ENV === "development";
     return { 
-      balance, 
-      transactions, 
-      packages, 
-      settings, 
-      contactStats, 
-      systemHealth,
-      debug: {
+      balance: balance?.data || {}, 
+      transactions: transactions?.data || { transactions: [], pagination: {} }, 
+      packages: packages?.data || [], 
+      settings: settings?.data || {},
+      debug: isDevelopment ? {
         sessionId: session?.id,
         shop: session?.shop,
         timestamp: new Date().toISOString()
-      }
+      } : undefined
     };
   } catch (error) {
-    console.error("Settings loader error:", error);
+    // eslint-disable-next-line no-undef
+    const isDevelopment = process.env.NODE_ENV === "development";
     return {
-      balance: { data: {} },
-      transactions: { data: [] },
-      packages: { data: [] },
-      settings: { data: {} },
-      contactStats: { data: {} },
-      systemHealth: { data: {} },
-      debug: {
+      balance: {},
+      transactions: { transactions: [], pagination: {} },
+      packages: [],
+      settings: {},
+      debug: isDevelopment ? {
         error: error.message,
         timestamp: new Date().toISOString()
-      }
+      } : undefined
     };
   }
 };
@@ -50,54 +48,31 @@ export const action = async ({ request }) => {
   const action = formData.get("_action");
   
   try {
-    const { session } = await authenticate.admin(request);
+    await authenticate.admin(request);
     
     switch (action) {
       case "purchasePackage":
-        return await serverApi.post(request, "/api/billing/purchase", {
+        return await serverApi.post(request, "/billing/purchase", {
           packageId: formData.get("packageId"),
-          shop: session?.shop
+          successUrl: formData.get("successUrl") || `${new URL(request.url).origin}/app/settings`,
+          cancelUrl: formData.get("cancelUrl") || `${new URL(request.url).origin}/app/settings`
         });
       
       case "saveSettings":
-        return await serverApi.post(request, "/api/settings", {
-          smsProvider: {
-            apiKey: formData.get("providerApiKey"),
-            senderId: formData.get("senderId")
-          },
-          shop: session?.shop
-        });
-      
-      case "saveBillingSettings":
-        return await serverApi.post(request, "/api/settings/billing", {
-          autoRecharge: formData.get("autoRecharge") === "true",
-          autoRechargeAmount: parseInt(formData.get("autoRechargeAmount") || "0"),
-          lowBalanceAlert: formData.get("lowBalanceAlert") === "true",
-          lowBalanceThreshold: parseInt(formData.get("lowBalanceThreshold") || "0"),
-          shop: session?.shop
-        });
-      
-      case "processPayment":
-        return await serverApi.post(request, "/api/billing/process-payment", {
-          packageId: formData.get("packageId"),
-          paymentMethod: formData.get("paymentMethod"),
-          amount: parseFloat(formData.get("amount") || "0"),
-          shop: session?.shop
-        });
-      
-      case "submitSupport":
-        return await serverApi.post(request, "/api/support/ticket", {
-          subject: formData.get("subject"),
-          message: formData.get("message"),
-          shop: session?.shop
+        return await serverApi.put(request, "/settings/sender", {
+          senderNumber: formData.get("senderNumber"),
+          senderName: formData.get("senderName")
         });
       
       default:
         return { error: "Unknown action" };
     }
   } catch (error) {
-    console.error("Settings action error:", error);
-    return { error: error.message };
+    return { 
+      success: false, 
+      error: error.message || "Unknown error",
+      message: error.message || "Failed to process settings action"
+    };
   }
 };
 

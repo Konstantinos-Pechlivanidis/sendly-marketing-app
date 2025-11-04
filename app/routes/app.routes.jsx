@@ -9,5 +9,3 @@ export const loader = async ({ request }) => {
 export default function AppRoutesRedirect() {
   return null;
 }
-
-

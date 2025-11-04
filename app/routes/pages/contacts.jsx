@@ -13,6 +13,7 @@ import { LoadingSpinner } from "../../components/ui/LoadingSpinner";
 import { PageLayout, PageHeader, PageContent, PageSection } from "../../components/ui/PageLayout";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbSeparator } from "../../components/ui/Breadcrumb";
 import { ActionButton, ActionGroup } from "../../components/ui/ActionButton";
+import { Icon } from "../../components/ui/Icon";
 import { api } from "../../utils/api.client";
 
 export default function ContactsPage() {
@@ -62,12 +63,29 @@ export default function ContactsPage() {
   }, [data]);
 
   const handleCreateContact = async () => {
+    // Build payload as per backend API
+    const payload = {
+      phoneE164: formData.phone
+    };
+    if (formData.firstName) payload.firstName = formData.firstName;
+    if (formData.lastName) payload.lastName = formData.lastName;
+    if (formData.email) payload.email = formData.email;
+    if (formData.gender) payload.gender = formData.gender;
+    if (formData.birthDate) payload.birthDate = formData.birthDate;
+    if (typeof formData.smsConsent !== 'undefined' && formData.smsConsent !== null) {
+      payload.smsConsent = formData.smsConsent === true || formData.smsConsent === 'opted_in' ? 'opted_in' : (formData.smsConsent === 'opted_out' ? 'opted_out' : 'unknown');
+    }
+    // You can add tags if present in the form UI (handle if array)
+    if (Array.isArray(formData.tags)) payload.tags = formData.tags;
     try {
-      await api.contacts.create(formData);
+      console.log('[CONTACT CREATE] Sending payload:', payload);
+      const resp = await api.contacts.create(payload);
+      console.log('[CONTACT CREATE] Response:', resp);
       setAlert({ type: 'success', message: 'Contact created successfully!' });
       closeModal();
       window.location.reload();
     } catch (error) {
+      console.error('[CONTACT CREATE ERROR]', error);
       setAlert({ type: 'error', message: `Failed to create contact: ${error.message}` });
     }
   };
@@ -85,7 +103,7 @@ export default function ContactsPage() {
 
   const handleDeleteContact = async (contactId) => {
     if (!confirm('Are you sure you want to delete this contact?')) return;
-    
+
     try {
       await api.contacts.delete(contactId);
       setAlert({ type: 'success', message: 'Contact deleted successfully!' });
@@ -98,7 +116,7 @@ export default function ContactsPage() {
   const handleBulkDelete = async () => {
     if (selectedContacts.length === 0) return;
     if (!confirm(`Are you sure you want to delete ${selectedContacts.length} contacts?`)) return;
-    
+
     setLoading(true);
     try {
       await Promise.all(selectedContacts.map(id => api.contacts.delete(id)));
@@ -143,15 +161,15 @@ export default function ContactsPage() {
 
   const convertToCSV = (data) => {
     if (!data || data.length === 0) return '';
-    
+
     const headers = ['firstName', 'lastName', 'phoneE164', 'email', 'gender', 'birthDate', 'smsConsent'];
     const csvContent = [
       headers.join(','),
-      ...data.map(contact => 
+      ...data.map(contact =>
         headers.map(header => contact[header] || '').join(',')
       )
     ].join('\n');
-    
+
     return csvContent;
   };
 
@@ -166,8 +184,8 @@ export default function ContactsPage() {
   };
 
   const handleSelectContact = (contactId) => {
-    setSelectedContacts(prev => 
-      prev.includes(contactId) 
+    setSelectedContacts(prev =>
+      prev.includes(contactId)
         ? prev.filter(id => id !== contactId)
         : [...prev, contactId]
     );
@@ -230,13 +248,13 @@ export default function ContactsPage() {
   // Client-side filtering
   const filteredContacts = contacts.filter((contact) => {
     const searchLower = filters.q.toLowerCase();
-    const matchesSearch = !filters.q || 
+    const matchesSearch = !filters.q ||
       contact.firstName?.toLowerCase().includes(searchLower) ||
       contact.lastName?.toLowerCase().includes(searchLower) ||
       contact.phone?.toLowerCase().includes(searchLower) ||
       contact.email?.toLowerCase().includes(searchLower);
 
-    const matchesFilter = 
+    const matchesFilter =
       filters.filter === 'all' ||
       (filters.filter === 'male' && contact.gender === 'male') ||
       (filters.filter === 'female' && contact.gender === 'female') ||
@@ -270,31 +288,35 @@ export default function ContactsPage() {
                 <Badge variant="info" size="sm">
                   {selectedContacts.length} selected
                 </Badge>
-                <ActionButton 
-                  variant="outline" 
+                <ActionButton
+                  variant="outline"
                   size="sm"
                   onClick={handleBulkDelete}
                   disabled={loading}
                 >
-                  {loading ? <LoadingSpinner size="sm" /> : "🗑️"} Delete Selected
+                  {/* CHANGED: Replaced emoji with Icon */}
+                  {loading ? <LoadingSpinner size="sm" className="mr-2" /> : <Icon name="trash" size="sm" className="mr-2" />} Delete Selected
                 </ActionButton>
               </div>
             )}
-            <ActionButton 
-              variant="outline" 
+            <ActionButton
+              variant="outline"
               onClick={handleExportContacts}
               disabled={loading}
             >
-              {loading ? <LoadingSpinner size="sm" /> : "📤"} Export
+              {/* CHANGED: Added Icon */}
+              {loading ? <LoadingSpinner size="sm" className="mr-2" /> : <Icon name="download" size="sm" className="mr-2" />} Export
             </ActionButton>
-            <ActionButton 
-              variant="outline" 
+            <ActionButton
+              variant="outline"
               onClick={() => setIsImportModalOpen(true)}
             >
-              📥 Import
+              {/* CHANGED: Added Icon */}
+              <Icon name="upload" size="sm" className="mr-2" /> Import
             </ActionButton>
             <ActionButton variant="primary" onClick={openCreateModal}>
-              + Add Contact
+              {/* CHANGED: Replaced + with Icon */}
+              <Icon name="plus" size="sm" className="mr-2" /> Add Contact
             </ActionButton>
           </ActionGroup>
         }
@@ -309,282 +331,326 @@ export default function ContactsPage() {
 
       {/* Page Content */}
       <PageContent>
-        <PageSection>
+        {/* CHANGED: Removed the redundant hero <section> and <h1>. */}
+
         {/* Stats Overview */}
-        {stats.total !== undefined && (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-gray-600">Total Contacts</p>
-                  <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <div className="w-4 h-4 bg-primary rounded-sm"></div>
+        {/* CHANGED: Wrapped in PageSection */}
+        <PageSection>
+          {stats.total !== undefined && (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+              <Card className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">Total Contacts</p>
+                    <p className="text-3xl font-bold text-gray-900">{stats.total?.toLocaleString() || 0}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                    <Icon name="users" size="lg" className="text-primary" />
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-gray-900">{stats.total?.toLocaleString() || 0}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-gray-600">Subscribed</p>
-                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                    <div className="w-4 h-4 bg-green-600 rounded-sm"></div>
+              </Card>
+              <Card className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">Subscribed</p>
+                    <p className="text-3xl font-bold text-primary">{stats.subscribed?.toLocaleString() || 0}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                    <Icon name="success" size="lg" className="text-green-600" />
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-primary">{stats.subscribed?.toLocaleString() || 0}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-gray-600">Unsubscribed</p>
-                  <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
-                    <div className="w-4 h-4 bg-red-600 rounded-sm"></div>
+              </Card>
+              <Card className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">Unsubscribed</p>
+                    <p className="text-3xl font-bold text-red-600">{stats.unsubscribed?.toLocaleString() || 0}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                    <Icon name="error" size="lg" className="text-red-600" />
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-red-600">{stats.unsubscribed?.toLocaleString() || 0}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-gray-600">Growth</p>
-                  <div className="w-8 h-8 bg-secondary/10 rounded-lg flex items-center justify-center">
-                    <div className="w-4 h-4 bg-secondary rounded-sm"></div>
+              </Card>
+              <Card className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">Growth</p>
+                    <p className="text-3xl font-bold text-secondary">{stats.growth || "+0%"}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center">
+                    <Icon name="chart" size="lg" className="text-secondary" />
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-secondary">{stats.growth || "+0%"}</p>
-              </CardContent>
+              </Card>
+            </div>
+          )}
+        </PageSection>
+
+        {/* Advanced Filters Section - Sand Background */}
+        {/* CHANGED: Replaced <section> with <PageSection> */}
+        <PageSection className="py-16">
+          <div className="space-y-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-semibold text-gray-900 mb-4">Contact Management</h2>
+              <p className="text-base text-deep/90 leading-relaxed max-w-2xl mx-auto">
+                Filter, search, and manage your contact list with advanced segmentation tools.
+              </p>
+            </div>
+
+            <Card className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+              <div className="mb-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-2xl font-semibold text-gray-900">Filters & Search</h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setFilters({
+                      page: 1,
+                      pageSize: 20,
+                      filter: 'all',
+                      q: '',
+                      sortBy: 'createdAt',
+                      sortOrder: 'desc',
+                      gender: '',
+                      smsConsent: '',
+                      hasBirthDate: ''
+                    })}
+                    className="rounded-lg"
+                  >
+                    {/* CHANGED: Added Icon */}
+                    <Icon name="close" size="sm" className="mr-2" />
+                    Clear Filters
+                  </Button>
+                </div>
+              </div>
+              <div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="lg:col-span-1">
+                  <Label htmlFor="searchFilter">Search Contacts</Label>
+                  <Input
+                    id="SearchFilter"
+                    label="Search Contacts"
+                    value={filters.q}
+                    onChange={(e) => setFilters({ ...filters, q: e.target.value })}
+                    placeholder="Search by name, phone, or email..."
+                  />
+                  </div>
+                  <Select
+                    label="Gender"
+                    value={filters.gender}
+                    onChange={(e) => setFilters({ ...filters, gender: e.target.value })}
+                    options={[
+                      { value: '', label: 'All Genders' },
+                      { value: 'male', label: 'Male' },
+                      { value: 'female', label: 'Female' },
+                      { value: 'other', label: 'Other' },
+                    ]}
+                  />
+
+                  <Select
+                    label="SMS Consent"
+                    value={filters.smsConsent}
+                    onChange={(e) => setFilters({ ...filters, smsConsent: e.target.value })}
+                    options={[
+                      { value: '', label: 'All Consent Status' },
+                      { value: 'opted_in', label: 'Opted In' },
+                      { value: 'opted_out', label: 'Opted Out' },
+                      { value: 'unknown', label: 'Unknown' },
+                    ]}
+                  />
+
+                  <Select
+                    label="Birthday"
+                    value={filters.hasBirthDate}
+                    onChange={(e) => setFilters({ ...filters, hasBirthDate: e.target.value })}
+                    options={[
+                      { value: '', label: 'All Contacts' },
+                      { value: 'true', label: 'Has Birthday' },
+                      { value: 'false', label: 'No Birthday' },
+                    ]}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <Select
+                    label="Sort by"
+                    value={filters.sortBy}
+                    onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
+                    options={[
+                      { value: 'createdAt', label: 'Date Added' },
+                      { value: 'firstName', label: 'First Name' },
+                      { value: 'lastName', label: 'Last Name' },
+                      { value: 'email', label: 'Email' },
+                      { value: 'phoneE164', label: 'Phone' },
+                    ]}
+                  />
+
+                  <Select
+                    label="Sort Order"
+                    value={filters.sortOrder}
+                    onChange={(e) => setFilters({ ...filters, sortOrder: e.target.value })}
+                    options={[
+                      { value: 'desc', label: 'Descending' },
+                      { value: 'asc', label: 'Ascending' },
+                    ]}
+                  />
+                </div>
+              </div>
             </Card>
           </div>
-        )}
-
-        {/* Advanced Filters */}
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-h3">Filters & Search</h2>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setFilters({
-                page: 1,
-                pageSize: 20,
-                filter: 'all',
-                q: '',
-                sortBy: 'createdAt',
-                sortOrder: 'desc',
-                gender: '',
-                smsConsent: '',
-                hasBirthDate: ''
-              })}
-              className="rounded-lg"
-            >
-              Clear Filters
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Input
-              label="Search Contacts"
-              value={filters.q}
-              onChange={(e) => setFilters({ ...filters, q: e.target.value })}
-              placeholder="Search by name, phone, or email..."
-            />
-            
-            <Select
-              label="Gender"
-              value={filters.gender}
-              onChange={(e) => setFilters({ ...filters, gender: e.target.value })}
-              options={[
-                { value: '', label: 'All Genders' },
-                { value: 'male', label: 'Male' },
-                { value: 'female', label: 'Female' },
-                { value: 'other', label: 'Other' },
-              ]}
-            />
-
-            <Select
-              label="SMS Consent"
-              value={filters.smsConsent}
-              onChange={(e) => setFilters({ ...filters, smsConsent: e.target.value })}
-              options={[
-                { value: '', label: 'All Consent Status' },
-                { value: 'opted_in', label: 'Opted In' },
-                { value: 'opted_out', label: 'Opted Out' },
-                { value: 'unknown', label: 'Unknown' },
-              ]}
-            />
-
-            <Select
-              label="Birthday"
-              value={filters.hasBirthDate}
-              onChange={(e) => setFilters({ ...filters, hasBirthDate: e.target.value })}
-              options={[
-                { value: '', label: 'All Contacts' },
-                { value: 'true', label: 'Has Birthday' },
-                { value: 'false', label: 'No Birthday' },
-              ]}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <Select
-              label="Sort by"
-              value={filters.sortBy}
-              onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
-              options={[
-                { value: 'createdAt', label: 'Date Added' },
-                { value: 'firstName', label: 'First Name' },
-                { value: 'lastName', label: 'Last Name' },
-                { value: 'email', label: 'Email' },
-                { value: 'phoneE164', label: 'Phone' },
-              ]}
-            />
-
-            <Select
-              label="Sort Order"
-              value={filters.sortOrder}
-              onChange={(e) => setFilters({ ...filters, sortOrder: e.target.value })}
-              options={[
-                { value: 'desc', label: 'Descending' },
-                { value: 'asc', label: 'Ascending' },
-              ]}
-            />
-          </div>
-        </Card>
+        </PageSection>
 
         {/* Contacts Table */}
-        {filteredContacts.length > 0 ? (
-          <>
-            <Card className="overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                      <input
-                        type="checkbox"
-                        checked={selectedContacts.length === filteredContacts.length && filteredContacts.length > 0}
-                        onChange={handleSelectAll}
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                      Phone
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                      Gender
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                      SMS Consent
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredContacts.map((contact) => (
-                    <tr key={contact.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="checkbox"
-                          checked={selectedContacts.includes(contact.id)}
-                          onChange={() => handleSelectContact(contact.id)}
-                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium text-gray-900">
-                          {contact.firstName} {contact.lastName}
-                        </div>
-                        {contact.birthDate && (
-                          <div className="text-xs text-gray-500">
-                            🎂 {new Date(contact.birthDate).toLocaleDateString()}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {contact.phoneE164 || contact.phone || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {contact.email || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">
-                        {contact.gender ? (
-                          <Badge variant="info" size="sm">
-                            {contact.gender}
-                          </Badge>
-                        ) : '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <Badge variant={contact.smsConsent === 'opted_in' ? 'success' : contact.smsConsent === 'opted_out' ? 'danger' : 'warning'} size="sm">
-                          {contact.smsConsent === 'opted_in' ? 'Opted In' : contact.smsConsent === 'opted_out' ? 'Opted Out' : 'Unknown'}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openEditModal(contact)}
-                            className="rounded-lg"
-                          >
-                            ✏️ Edit
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-red-600 border-red-300 hover:bg-red-50 rounded-lg"
-                            onClick={() => handleDeleteContact(contact.id)}
-                          >
-                            🗑️
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </Card>
-
-            {/* Pagination */}
-            {pagination.totalPages > 1 && (
-              <Pagination
-                currentPage={pagination.page}
-                totalPages={pagination.totalPages}
-                pageSize={pagination.pageSize}
-                totalItems={pagination.totalItems}
-                onPageChange={(page) => setFilters({ ...filters, page })}
-              />
-            )}
-          </>
-        ) : (
-          <div className="bg-surface rounded-xl shadow-subtle border border-border p-12 text-center">
-            <div className="max-w-md mx-auto">
-              <span className="text-6xl">📱</span>
-              <h3 className="text-h3 mt-4 mb-2">
-                {filters.q || filters.filter !== 'all' ? "No contacts found" : "No contacts yet"}
-              </h3>
-              <p className="text-caption mb-6">
-                {filters.q || filters.filter !== 'all'
-                  ? "Try adjusting your search or filters"
-                  : "Start by adding your first contact"}
-              </p>
-              {!(filters.q || filters.filter !== 'all') && (
-                <Button variant="primary" onClick={openCreateModal} className="rounded-xl">
-                  + Add Contact
-                </Button>
-              )}
-            </div>
+        {/* CHANGED: Replaced <section> with <PageSection> */}
+        <PageSection>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-semibold text-gray-900 mb-4">Contact List</h2>
+            <p className="text-base text-deep/90 leading-relaxed max-w-2xl mx-auto">
+              View and manage all your contacts with detailed information and subscription status.
+            </p>
           </div>
-        )}
+
+          {filteredContacts.length > 0 ? (
+            <>
+              <Card className="bg-white rounded-xl shadow-sm overflow-hidden">
+                {/* CHANGED: Added responsive wrapper for table */}
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                          <input
+                            type="checkbox"
+                            checked={selectedContacts.length === filteredContacts.length && filteredContacts.length > 0}
+                            onChange={handleSelectAll}
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                          Name
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                          Phone
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                          Email
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                          Gender
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                          SMS Consent
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredContacts.map((contact) => (
+                        <tr key={contact.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <input
+                              type="checkbox"
+                              checked={selectedContacts.includes(contact.id)}
+                              onChange={() => handleSelectContact(contact.id)}
+                              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="font-medium text-gray-900">
+                              {contact.firstName} {contact.lastName}
+                            </div>
+                            {contact.birthDate && (
+                              <div className="text-xs text-gray-500">
+                                <Icon name="calendar" size="xs" className="inline mr-1" /> {new Date(contact.birthDate).toLocaleDateString()}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {contact.phoneE164 || contact.phone || '-'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {contact.email || '-'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">
+                            {contact.gender ? (
+                              <Badge variant="info" size="sm">
+                                {contact.gender}
+                              </Badge>
+                            ) : '-'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <Badge variant={contact.smsConsent === 'opted_in' ? 'success' : contact.smsConsent === 'opted_out' ? 'danger' : 'warning'} size="sm">
+                              {contact.smsConsent === 'opted_in' ? 'Opted In' : contact.smsConsent === 'opted_out' ? 'Opted Out' : 'Unknown'}
+                            </Badge>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openEditModal(contact)}
+                                className="rounded-lg"
+                              >
+                                {/* CHANGED: Replaced emoji with Icon */}
+                                <Icon name="edit" size="sm" className="mr-2" /> Edit
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-red-600 border-red-300 hover:bg-red-50 rounded-lg"
+                                onClick={() => handleDeleteContact(contact.id)}
+                              >
+                                {/* CHANGED: Replaced emoji with Icon */}
+                                <Icon name="trash" size="sm" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+
+              {/* Pagination */}
+              {pagination.totalPages > 1 && (
+                <Pagination
+                  currentPage={pagination.page}
+                  totalPages={pagination.totalPages}
+                  pageSize={pagination.pageSize}
+                  totalItems={pagination.totalItems}
+                  onPageChange={(page) => setFilters({ ...filters, page })}
+                />
+              )}
+            </>
+          ) : (
+            <Card className="bg-white rounded-xl p-12 shadow-sm text-center">
+              <div className="max-w-md mx-auto">
+                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Icon name="users" size="2xl" className="text-primary" />
+                </div>
+                <h3 className="text-2xl font-semibold text-gray-900 mt-4 mb-2">
+                  {filters.q || filters.filter !== 'all' ? "No contacts found" : "No contacts yet"}
+                </h3>
+                <p className="text-base text-gray-600 mb-6">
+                  {filters.q || filters.filter !== 'all'
+                    ? "Try adjusting your search or filters"
+                    : "Start by adding your first contact"}
+                </p>
+                {!(filters.q || filters.filter !== 'all') && (
+                  <Button variant="primary" onClick={openCreateModal} className="rounded-xl">
+                    {/* CHANGED: Replaced + with Icon */}
+                    <Icon name="plus" size="sm" className="mr-2" /> Add Contact
+                  </Button>
+                )}
+              </div>
+            </Card>
+          )}
+        </PageSection>
+      </PageContent>
 
       {/* Create/Edit Modal */}
       <Modal
@@ -597,11 +663,17 @@ export default function ContactsPage() {
             <Button variant="outline" onClick={closeModal}>
               Cancel
             </Button>
-            <Button 
-              variant="primary" 
+            <Button
+              variant="primary"
               onClick={editingContact ? handleUpdateContact : handleCreateContact}
               disabled={!formData.firstName || !formData.phone}
             >
+              {/* CHANGED: Added conditional Icons */}
+              {editingContact ? (
+                <Icon name="edit" size="sm" className="mr-2" />
+              ) : (
+                <Icon name="plus" size="sm" className="mr-2" />
+              )}
               {editingContact ? 'Update Contact' : 'Add Contact'}
             </Button>
           </>
@@ -615,7 +687,7 @@ export default function ContactsPage() {
               onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
               placeholder="John"
             />
-            
+
             <Input
               label="Last Name"
               value={formData.lastName}
@@ -685,8 +757,8 @@ export default function ContactsPage() {
             <Button variant="outline" onClick={() => setIsImportModalOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              variant="primary" 
+            <Button
+              variant="primary"
               onClick={() => {
                 // Handle CSV file upload
                 const fileInput = document.getElementById('csvFile');
@@ -705,7 +777,7 @@ export default function ContactsPage() {
                       });
                       return contact;
                     }).filter(contact => contact.firstName && contact.phoneE164);
-                    
+
                     handleImportContacts(contacts);
                   };
                   reader.readAsText(file);
@@ -713,14 +785,20 @@ export default function ContactsPage() {
               }}
               disabled={loading}
             >
-              {loading ? <LoadingSpinner size="sm" /> : 'Import Contacts'}
+              {/* CHANGED: Added Icon */}
+              {loading ? <LoadingSpinner size="sm" className="mr-2" /> : <Icon name="upload" size="sm" className="mr-2" />}
+              Import Contacts
             </Button>
           </>
         }
       >
         <div className="space-y-4">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="font-semibold text-blue-900 mb-2">📋 CSV Format Requirements</h3>
+            {/* CHANGED: Replaced emoji with Icon and added flex */}
+            <h3 className="font-semibold text-blue-900 mb-2 flex items-center">
+              <Icon name="document" size="sm" className="mr-2" />
+              CSV Format Requirements
+            </h3>
             <ul className="text-sm text-blue-800 space-y-1">
               <li>• Required columns: firstName, phoneE164</li>
               <li>• Optional columns: lastName, email, gender, birthDate, smsConsent</li>
@@ -744,16 +822,13 @@ export default function ContactsPage() {
           <div className="bg-gray-50 rounded-lg p-4">
             <h4 className="font-medium text-gray-900 mb-2">Sample CSV:</h4>
             <pre className="text-xs text-gray-600 bg-white p-2 rounded border">
-{`firstName,lastName,phoneE164,email,gender,birthDate,smsConsent
+              {`firstName,lastName,phoneE164,email,gender,birthDate,smsConsent
 John,Doe,+1234567890,john@example.com,male,1990-01-01,opted_in
 Jane,Smith,+1234567891,jane@example.com,female,1985-05-15,opted_in`}
             </pre>
           </div>
         </div>
       </Modal>
-        </PageSection>
-      </PageContent>
     </PageLayout>
   );
 }
-

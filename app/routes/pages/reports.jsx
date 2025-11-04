@@ -12,6 +12,7 @@ import { Modal } from "../../components/ui/Modal";
 import { PageLayout, PageHeader, PageContent, PageSection } from "../../components/ui/PageLayout";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbSeparator } from "../../components/ui/Breadcrumb";
 import { ActionButton, ActionGroup } from "../../components/ui/ActionButton";
+import { Icon } from "../../components/ui/Icon";
 
 export default function ReportsPage() {
   const data = useLoaderData();
@@ -24,7 +25,7 @@ export default function ReportsPage() {
   const revenue = data?.revenue?.data || {};
 
   const [dateRange, setDateRange] = useState("30d");
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false); // Use fetcher.state instead
   const [alert, setAlert] = useState(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [exportFormat, setExportFormat] = useState('csv');
@@ -42,59 +43,47 @@ export default function ReportsPage() {
     sortOrder: 'desc'
   });
 
-  const handleRefreshData = async () => {
-    setLoading(true);
-    try {
-      fetcher.submit(
-        { _action: "refreshReports", dateRange: filters.dateRange },
-        { method: "post" }
-      );
-      setAlert({ type: 'success', message: 'Reports refreshed successfully!' });
-    } catch (error) {
-      setAlert({ type: 'error', message: `Failed to refresh reports: ${error.message}` });
-    } finally {
-      setLoading(false);
+  // Handle fetcher responses
+  useEffect(() => {
+    if (fetcher.state === 'idle' && fetcher.data) {
+      const { success, message, error } = fetcher.data;
+      if (success) {
+        setAlert({ type: 'success', message: message || 'Action completed successfully!' });
+      } else {
+        setAlert({ type: 'error', message: error || 'An error occurred.' });
+      }
     }
+  }, [fetcher.state, fetcher.data]);
+
+  const handleRefreshData = () => {
+    fetcher.submit(
+      { _action: "refreshReports", dateRange: filters.dateRange },
+      { method: "post" }
+    );
   };
 
-  const handleExportReports = async () => {
-    setLoading(true);
-    try {
-      fetcher.submit(
-        {
-          _action: "exportReports",
-          format: exportFormat,
-          dateRange: filters.dateRange,
-          ...exportData
-        },
-        { method: "post" }
-      );
-      setAlert({ type: 'success', message: 'Reports exported successfully!' });
-      setIsExportModalOpen(false);
-    } catch (error) {
-      setAlert({ type: 'error', message: `Failed to export reports: ${error.message}` });
-    } finally {
-      setLoading(false);
-    }
+  const handleExportReports = () => {
+    fetcher.submit(
+      {
+        _action: "exportReports",
+        format: exportFormat,
+        dateRange: filters.dateRange,
+        ...exportData
+      },
+      { method: "post" }
+    );
+    setIsExportModalOpen(false); // Close modal optimistically
   };
 
-  const handleScheduleReport = async () => {
-    setLoading(true);
-    try {
-      fetcher.submit(
-        {
-          _action: "scheduleReport",
-          dateRange: filters.dateRange,
-          frequency: 'weekly'
-        },
-        { method: "post" }
-      );
-      setAlert({ type: 'success', message: 'Report scheduled successfully!' });
-    } catch (error) {
-      setAlert({ type: 'error', message: `Failed to schedule report: ${error.message}` });
-    } finally {
-      setLoading(false);
-    }
+  const handleScheduleReport = () => {
+    fetcher.submit(
+      {
+        _action: "scheduleReport",
+        dateRange: filters.dateRange,
+        frequency: 'weekly' // Example frequency
+      },
+      { method: "post" }
+    );
   };
 
   const getGrowthColor = (growth) => {
@@ -105,12 +94,12 @@ export default function ReportsPage() {
     return 'text-gray-500';
   };
 
-  const getGrowthIcon = (growth) => {
-    if (!growth) return '➖';
+  const getGrowthIconName = (growth) => {
+    if (!growth) return 'minus';
     const value = parseFloat(growth.replace(/[+%-]/g, ''));
-    if (value > 0) return '📈';
-    if (value < 0) return '📉';
-    return '➖';
+    if (value > 0) return 'arrowUp';
+    if (value < 0) return 'arrowDown';
+    return 'minus';
   };
 
   const formatCurrency = (amount) => {
@@ -131,6 +120,8 @@ export default function ReportsPage() {
     }
   }, [alert]);
 
+  const isSubmitting = fetcher.state === 'submitting';
+
   return (
     <PageLayout>
       {/* Alert */}
@@ -144,14 +135,11 @@ export default function ReportsPage() {
         </div>
       )}
 
-      {/* iOS 18 Glass Header */}
-      <header className="glass-surface sticky top-0 z-10">
-        <div className="px-6 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-h1">Reports & Analytics</h1>
-            <p className="text-caption mt-1">Track performance and measure ROI</p>
-          </div>
-          <div className="flex items-center gap-3">
+      <PageHeader
+        title="Reports & Analytics"
+        subtitle="Track performance and measure ROI"
+        actions={
+          <ActionGroup>
             <Select
               value={filters.dateRange}
               onChange={(e) => setFilters({ ...filters, dateRange: e.target.value })}
@@ -161,360 +149,412 @@ export default function ReportsPage() {
                 { value: '90d', label: 'Last 90 days' },
                 { value: '1y', label: 'Last year' }
               ]}
+              className="min-w-[150px]" 
             />
-            <Button
+            <ActionButton
               variant="outline"
               onClick={handleRefreshData}
-              disabled={loading}
-              className="rounded-xl"
+              disabled={isSubmitting}
             >
-              {loading ? <LoadingSpinner size="sm" /> : '🔄'} Refresh
-            </Button>
-            <Button
+              {isSubmitting ? <LoadingSpinner size="sm" className="mr-2" /> : <Icon name="refresh" size="sm" className="mr-2" />} Refresh
+            </ActionButton>
+            <ActionButton
               variant="outline"
               onClick={() => setIsExportModalOpen(true)}
-              className="rounded-xl"
             >
-              📥 Export
-            </Button>
-            <Button
+              <Icon name="download" size="sm" className="mr-2" /> Export
+            </ActionButton>
+            <ActionButton
               variant="primary"
               onClick={handleScheduleReport}
-              disabled={loading}
-              className="rounded-xl"
+              disabled={isSubmitting}
             >
-              📅 Schedule
-            </Button>
-          </div>
-        </div>
-      </header>
+              {isSubmitting ? <LoadingSpinner size="sm" className="mr-2" /> : <Icon name="calendar" size="sm" className="mr-2" />} Schedule
+            </ActionButton>
+          </ActionGroup>
+        }
+      >
+        <Breadcrumb>
+          <BreadcrumbItem href="/app">Sendly</BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem isLast>Reports</BreadcrumbItem>
+        </Breadcrumb>
+      </PageHeader>
 
       {/* Main Content */}
-      <main className="p-6 space-y-6">
+      {/* CHANGED: Added space-y-8 for more vertical spacing between sections */}
+      <PageContent className="space-y-8"> 
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-caption text-gray-600">Total SMS Sent</p>
-              <span className="text-2xl">📱</span>
-            </div>
-            <p className="text-h2 text-deep">{overview.totalSent?.toLocaleString() || 0}</p>
-            <div className="flex items-center gap-2 mt-1">
-              <span className={`text-caption ${getGrowthColor(overview.sentGrowth)}`}>
-                {getGrowthIcon(overview.sentGrowth)} {overview.sentGrowth || "+0%"}
-              </span>
-              <span className="text-caption text-gray-500">vs previous period</span>
-            </div>
-          </Card>
+        <PageSection>
+           {/* CHANGED: Increased gap to gap-8 */}
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+            <Card className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Total SMS Sent</p>
+                  <p className="text-3xl font-bold text-gray-900">{overview.totalSent?.toLocaleString() || 0}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className={`text-sm font-medium ${getGrowthColor(overview.sentGrowth)} flex items-center`}>
+                      <Icon name={getGrowthIconName(overview.sentGrowth)} size="xs" className="mr-1" /> {overview.sentGrowth || "+0%"}
+                    </span>
+                    <span className="text-xs text-gray-500">vs previous period</span>
+                  </div>
+                </div>
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                  <Icon name="sms" size="lg" className="text-primary" />
+                </div>
+              </div>
+            </Card>
 
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-caption text-gray-600">Delivery Rate</p>
-              <span className="text-2xl">✅</span>
-            </div>
-            <p className="text-h2 text-primary">{formatPercentage(overview.deliveryRate)}</p>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-caption text-secondary">
-                {overview.totalDelivered?.toLocaleString() || 0} delivered
-              </span>
-              <Badge variant="success" size="sm">
-                {formatPercentage(overview.deliveryRate)}
-              </Badge>
-            </div>
-          </Card>
+            <Card className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Delivery Rate</p>
+                  <p className="text-3xl font-bold text-primary">{formatPercentage(overview.deliveryRate)}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-sm text-gray-600">
+                      {overview.totalDelivered?.toLocaleString() || 0} delivered
+                    </span>
+                  </div>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                  <Icon name="check" size="lg" className="text-green-600" />
+                </div>
+              </div>
+            </Card>
 
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-caption text-gray-600">Total Revenue</p>
-              <span className="text-2xl">💰</span>
-            </div>
-            <p className="text-h2 text-deep">{formatCurrency(revenue.total)}</p>
-            <div className="flex items-center gap-2 mt-1">
-              <span className={`text-caption ${getGrowthColor(revenue.growth)}`}>
-                {getGrowthIcon(revenue.growth)} {revenue.growth || "+0%"}
-              </span>
-              <span className="text-caption text-gray-500">vs previous period</span>
-            </div>
-          </Card>
+            <Card className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Total Revenue</p>
+                  <p className="text-3xl font-bold text-gray-900">{formatCurrency(revenue.total)}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className={`text-sm font-medium ${getGrowthColor(revenue.growth)} flex items-center`}>
+                      <Icon name={getGrowthIconName(revenue.growth)} size="xs" className="mr-1" /> {revenue.growth || "+0%"}
+                    </span>
+                    <span className="text-xs text-gray-500">vs previous period</span>
+                  </div>
+                </div>
+                <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center">
+                  <Icon name="money" size="lg" className="text-secondary" />
+                </div>
+              </div>
+            </Card>
 
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-caption text-gray-600">ROI</p>
-              <span className="text-2xl">📈</span>
-            </div>
-            <p className="text-h2 text-secondary">{revenue.roi || "0x"}</p>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-caption text-deep">
-                {formatCurrency(revenue.spent)} spent
-              </span>
-              <Badge variant="info" size="sm">
-                {revenue.roi || "0x"} ROI
-              </Badge>
-            </div>
-          </Card>
-        </div>
+            <Card className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">ROI</p>
+                  <p className="text-3xl font-bold text-secondary">{revenue.roi || "0x"}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-sm text-gray-600">
+                      {formatCurrency(revenue.spent)} spent
+                    </span>
+                  </div>
+                </div>
+                <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center">
+                  <Icon name="chart" size="lg" className="text-accent" />
+                </div>
+              </div>
+            </Card>
+          </div>
+        </PageSection>
 
         {/* Detailed Reports Tabs */}
-        <Tabs defaultValue="campaigns">
-          <TabsList className="flex gap-2 bg-muted rounded-xl p-2 mb-6 overflow-x-auto">
-            <TabsTrigger value="campaigns" className="rounded-lg px-6 py-2">
-              📊 Campaigns
-            </TabsTrigger>
-            <TabsTrigger value="automations" className="rounded-lg px-6 py-2">
-              🤖 Automations
-            </TabsTrigger>
-            <TabsTrigger value="messaging" className="rounded-lg px-6 py-2">
-              💬 Messaging
-            </TabsTrigger>
-            <TabsTrigger value="revenue" className="rounded-lg px-6 py-2">
-              💰 Revenue
-            </TabsTrigger>
-          </TabsList>
+        <PageSection>
+          <Tabs defaultValue="campaigns">
+            <TabsList className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-1 bg-gray-100 rounded-xl mb-8 shadow-inner">
+              <TabsTrigger 
+                value="campaigns" 
+                className="flex-1 px-4 py-1 text-secondary text-sm font-medium rounded-lg transition-all duration-200 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-primary data-[state=inactive]:hover:bg-white/50 flex items-center justify-center gap-2"
+              >
+                <Icon name="campaign" size="sm" /> Campaigns 
+              </TabsTrigger>
+              <TabsTrigger 
+                value="automations" 
+                className="flex-1 px-4 py-1 text-secondary text-sm font-medium rounded-lg transition-all duration-200 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-primary data-[state=inactive]:hover:bg-white/50 flex items-center justify-center gap-2"
+              >
+                <Icon name="automation" size="sm" /> Automations
+              </TabsTrigger>
+              <TabsTrigger 
+                value="messaging" 
+                className="flex-1 px-4 py-1 text-secondary text-sm font-medium rounded-lg transition-all duration-200 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-primary data-[state=inactive]:hover:bg-white/50 flex items-center justify-center gap-2"
+              >
+                <Icon name="sms" size="sm" /> Messaging
+              </TabsTrigger>
+              <TabsTrigger 
+                value="revenue" 
+                className="flex-1 px-4 py-1 text-secondary text-sm font-medium rounded-lg transition-all duration-200 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-primary data-[state=inactive]:hover:bg-white/50 flex items-center justify-center gap-2"
+              >
+                <Icon name="money" size="sm" /> Revenue
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Campaign Reports */}
-          <TabsContent value="campaigns">
-            <div className="space-y-6">
-              {/* Campaign Performance */}
+            {/* Campaign Reports */}
+            <TabsContent value="campaigns">
+               {/* CHANGED: Increased space-y-8 */}
+              <div className="space-y-8">
+                <Card className="p-6">
+                  {/* CHANGED: Increased mb-6 */}
+                  <div className="flex items-center justify-between mb-6"> 
+                    <h2 className="text-h3">Campaign Performance</h2>
+                    <Badge variant="info" size="lg">
+                      {campaigns.total || 0} campaigns
+                    </Badge>
+                  </div>
+                   {/* CHANGED: Increased gap-6 and mb-8 */}
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-3 mb-8">
+                    <Card className="p-4 bg-muted">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-caption text-gray-600 mb-1">Total Campaigns</p>
+                          <p className="text-h2 text-deep">{campaigns.total || 0}</p>
+                        </div>
+                        <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
+                           <Icon name="campaign" size="md" className="text-gray-600" />
+                        </div>
+                      </div>
+                    </Card>
+                    <Card className="p-4 bg-primary/10">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-caption text-deep mb-1">Avg. Delivery Rate</p>
+                          <p className="text-h2 text-primary">{formatPercentage(campaigns.avgDeliveryRate)}</p>
+                        </div>
+                        <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                           <Icon name="check" size="md" className="text-green-600" />
+                        </div>
+                      </div>
+                    </Card>
+                    <Card className="p-4 bg-secondary/10">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-caption text-deep mb-1">Avg. Conversion</p>
+                          <p className="text-h2 text-secondary">{formatPercentage(campaigns.avgConversionRate)}</p>
+                        </div>
+                        <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                           <Icon name="chart" size="md" className="text-yellow-600" />
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
+
+                  {/* Top Campaigns */}
+                  {campaigns.topCampaigns && campaigns.topCampaigns.length > 0 && (
+                    <div>
+                      {/* CHANGED: Increased mb-4 */}
+                      <h3 className="text-body font-semibold text-deep mb-4">Top Performing Campaigns</h3>
+                      {/* CHANGED: Increased space-y-4 */}
+                      <div className="space-y-4">
+                        {campaigns.topCampaigns.map((campaign, idx) => (
+                          <Card key={campaign.id || idx} className="p-4 hover:bg-primary/10 transition-all duration-200">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <p className="text-body font-medium text-deep">{campaign.name}</p>
+                                  <Badge variant="info" size="sm">
+                                    #{idx + 1}
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center gap-4 text-caption text-gray-600">
+                                  <span>{campaign.sent?.toLocaleString() || 0} sent</span>
+                                  <span>•</span>
+                                  <span>{formatPercentage(campaign.deliveryRate)} delivered</span>
+                                  <span>•</span>
+                                  <span>{formatPercentage(campaign.conversionRate)} conversion</span>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="success" size="sm">
+                                    {formatPercentage(campaign.conversionRate)}
+                                  </Badge>
+                                  <Badge variant="info" size="sm">
+                                    {formatPercentage(campaign.deliveryRate)}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Automation Reports */}
+            <TabsContent value="automations">
               <Card className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-h3">Campaign Performance</h2>
-                  <Badge variant="info" size="lg">
-                    {campaigns.total || 0} campaigns
-                  </Badge>
-                </div>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mb-6">
-                  <Card className="p-4 bg-muted">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-caption text-gray-600 mb-1">Total Campaigns</p>
-                        <p className="text-h2 text-deep">{campaigns.total || 0}</p>
-                      </div>
-                      <Badge variant="default" size="lg">📊</Badge>
-                    </div>
-                  </Card>
-                  <Card className="p-4 bg-primary/10">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-caption text-deep mb-1">Avg. Delivery Rate</p>
-                        <p className="text-h2 text-primary">{formatPercentage(campaigns.avgDeliveryRate)}</p>
-                      </div>
-                      <Badge variant="success" size="lg">✅</Badge>
-                    </div>
-                  </Card>
-                  <Card className="p-4 bg-secondary/10">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-caption text-deep mb-1">Avg. Conversion</p>
-                        <p className="text-h2 text-secondary">{formatPercentage(campaigns.avgConversionRate)}</p>
-                      </div>
-                      <Badge variant="warning" size="lg">📈</Badge>
-                    </div>
-                  </Card>
-                </div>
+                 {/* CHANGED: Increased mb-6 */}
+                 <h2 className="text-h3 mb-6">Automation Performance</h2>
+                  {/* CHANGED: Increased gap-6 and mb-8 */}
+                 <div className="grid grid-cols-1 gap-6 md:grid-cols-4 mb-8">
+                   <div className="p-4 bg-muted rounded-lg">
+                     <p className="text-caption text-gray-600 mb-1">Total Triggered</p>
+                     <p className="text-h2 text-deep">{automations.totalTriggered?.toLocaleString() || 0}</p>
+                   </div>
+                   <div className="p-4 bg-primary/10 rounded-lg">
+                     <p className="text-caption text-deep mb-1">Sent</p>
+                     <p className="text-h2 text-primary">{automations.totalSent?.toLocaleString() || 0}</p>
+                   </div>
+                   <div className="p-4 bg-secondary/10 rounded-lg">
+                     <p className="text-caption text-deep mb-1">Success Rate</p>
+                     <p className="text-h2 text-secondary">{automations.successRate || "0%"}</p>
+                   </div>
+                   <div className="p-4 bg-deep/10 rounded-lg">
+                     <p className="text-caption text-deep mb-1">Avg. Revenue</p>
+                     <p className="text-h2 text-deep">{formatCurrency(automations.avgRevenue)}</p>
+                   </div>
+                 </div>
 
-                {/* Top Campaigns */}
-                {campaigns.topCampaigns && campaigns.topCampaigns.length > 0 && (
-                  <div>
-                    <h3 className="text-body font-semibold text-deep mb-3">Top Performing Campaigns</h3>
-                    <div className="space-y-3">
-                      {campaigns.topCampaigns.map((campaign, idx) => (
-                        <Card key={campaign.id || idx} className="p-4 hover:bg-primary/10 transition-all duration-200">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <p className="text-body font-medium text-deep">{campaign.name}</p>
-                                <Badge variant="info" size="sm">
-                                  #{idx + 1}
-                                </Badge>
-                              </div>
-                              <div className="flex items-center gap-4 text-caption text-gray-600">
-                                <span>{campaign.sent?.toLocaleString() || 0} sent</span>
-                                <span>•</span>
-                                <span>{formatPercentage(campaign.deliveryRate)} delivered</span>
-                                <span>•</span>
-                                <span>{formatPercentage(campaign.conversionRate)} conversion</span>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="success" size="sm">
-                                  {formatPercentage(campaign.conversionRate)}
-                                </Badge>
-                                <Badge variant="info" size="sm">
-                                  {formatPercentage(campaign.deliveryRate)}
-                                </Badge>
-                              </div>
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </Card>
-            </div>
-          </TabsContent>
+                 {/* Automation Breakdown */}
+                 {automations.breakdown && automations.breakdown.length > 0 && (
+                   <div>
+                    {/* CHANGED: Increased mb-4 */}
+                     <h3 className="text-body font-semibold text-deep mb-4">By Type</h3>
+                      {/* CHANGED: Increased gap-4 */}
+                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                       {automations.breakdown.map((auto) => (
+                         <Card
+                           key={auto.type}
+                           className="p-4 bg-muted rounded-lg hover:shadow-md transition-shadow"
+                         >
+                           <div className="flex items-center justify-between mb-2">
+                             <p className="text-body font-medium text-deep capitalize">{auto.type}</p>
+                             <Badge variant={auto.enabled ? "positive" : "default"} size="sm">
+                               {auto.enabled ? "Active" : "Inactive"}
+                             </Badge>
+                           </div>
+                           <div className="grid grid-cols-3 gap-2 text-center">
+                             <div>
+                               <p className="text-caption text-gray-600">Triggered</p>
+                               <p className="text-body font-semibold text-deep">{auto.triggered || 0}</p>
+                             </div>
+                             <div>
+                               <p className="text-caption text-gray-600">Sent</p>
+                               <p className="text-body font-semibold text-primary">{auto.sent || 0}</p>
+                             </div>
+                             <div>
+                               <p className="text-caption text-gray-600">Rate</p>
+                               <p className="text-body font-semibold text-secondary">{auto.rate || "0%"}</p>
+                             </div>
+                           </div>
+                         </Card>
+                       ))}
+                     </div>
+                   </div>
+                 )}
+               </Card>
+            </TabsContent>
 
-          {/* Automation Reports */}
-          <TabsContent value="automations">
-            <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
-              <h2 className="text-h3 mb-4">Automation Performance</h2>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-4 mb-6">
-                <div className="p-4 bg-muted rounded-lg">
-                  <p className="text-caption text-gray-600 mb-1">Total Triggered</p>
-                  <p className="text-h2 text-deep">{automations.totalTriggered?.toLocaleString() || 0}</p>
-                </div>
-                <div className="p-4 bg-primary/10 rounded-lg">
-                  <p className="text-caption text-deep mb-1">Sent</p>
-                  <p className="text-h2 text-primary">{automations.totalSent?.toLocaleString() || 0}</p>
-                </div>
-                <div className="p-4 bg-secondary/10 rounded-lg">
-                  <p className="text-caption text-deep mb-1">Success Rate</p>
-                  <p className="text-h2 text-secondary">{automations.successRate || "0%"}</p>
-                </div>
-                <div className="p-4 bg-deep/10 rounded-lg">
-                  <p className="text-caption text-deep mb-1">Avg. Revenue</p>
-                  <p className="text-h2 text-deep">${automations.avgRevenue?.toFixed(2) || "0.00"}</p>
-                </div>
-              </div>
+            {/* Messaging Reports */}
+            <TabsContent value="messaging">
+               <Card className="p-6">
+                 {/* CHANGED: Increased mb-6 */}
+                 <h2 className="text-h3 mb-6">Messaging Activity</h2>
+                 {/* CHANGED: Increased gap-6 and mb-8 */}
+                 <div className="grid grid-cols-1 gap-6 md:grid-cols-3 mb-8">
+                   <div className="p-4 bg-muted rounded-lg">
+                     <p className="text-caption text-gray-600 mb-1">Total Messages</p>
+                     <p className="text-h2 text-deep">{messaging.total?.toLocaleString() || 0}</p>
+                   </div>
+                   <div className="p-4 bg-primary/10 rounded-lg">
+                     <p className="text-caption text-deep mb-1">Delivered</p>
+                     <p className="text-h2 text-primary">{messaging.delivered?.toLocaleString() || 0}</p>
+                   </div>
+                   <div className="p-4 bg-red-50 rounded-lg">
+                     <p className="text-caption text-deep mb-1">Failed</p>
+                     <p className="text-h2 text-red-600">{messaging.failed?.toLocaleString() || 0}</p>
+                   </div>
+                 </div>
 
-              {/* Automation Breakdown */}
-              {automations.breakdown && automations.breakdown.length > 0 && (
-                <div>
-                  <h3 className="text-body font-semibold text-deep mb-3">By Type</h3>
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                    {automations.breakdown.map((auto) => (
-                      <div
-                        key={auto.type}
-                        className="p-4 bg-muted rounded-lg"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-body font-medium text-deep capitalize">{auto.type}</p>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            auto.enabled ? "bg-primary/20 text-primary" : "bg-gray-200 text-gray-600"
-                          }`}>
-                            {auto.enabled ? "Active" : "Inactive"}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                          <div>
-                            <p className="text-caption text-gray-600">Triggered</p>
-                            <p className="text-body font-semibold text-deep">{auto.triggered || 0}</p>
-                          </div>
-                          <div>
-                            <p className="text-caption text-gray-600">Sent</p>
-                            <p className="text-body font-semibold text-primary">{auto.sent || 0}</p>
-                          </div>
-                          <div>
-                            <p className="text-caption text-gray-600">Rate</p>
-                            <p className="text-body font-semibold text-secondary">{auto.rate || "0%"}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </TabsContent>
+                 {/* Delivery Timeline */}
+                 {messaging.timeline && messaging.timeline.length > 0 && (
+                   <div>
+                     {/* CHANGED: Increased mb-4 */}
+                     <h3 className="text-body font-semibold text-deep mb-4">Delivery Over Time</h3>
+                     {/* CHANGED: Increased space-y-3 */}
+                     <div className="space-y-3">
+                       {messaging.timeline.map((period, idx) => (
+                         <div
+                           key={idx}
+                           className="flex items-center gap-3 p-3 bg-muted rounded-lg"
+                         >
+                           <p className="text-caption text-gray-600 w-24">{period.date}</p>
+                           <div className="flex-1">
+                             <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                               <div
+                                 className="h-full bg-primary rounded-full"
+                                 style={{ width: `${period.deliveryRate || 0}%` }}
+                               />
+                             </div>
+                           </div>
+                           <p className="text-caption font-medium text-deep w-20 text-right">
+                             {period.sent?.toLocaleString() || 0} sent
+                           </p>
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                 )}
+               </Card>
+            </TabsContent>
 
-          {/* Messaging Reports */}
-          <TabsContent value="messaging">
-            <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
-              <h2 className="text-h3 mb-4">Messaging Activity</h2>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mb-6">
-                <div className="p-4 bg-muted rounded-lg">
-                  <p className="text-caption text-gray-600 mb-1">Total Messages</p>
-                  <p className="text-h2 text-deep">{messaging.total?.toLocaleString() || 0}</p>
-                </div>
-                <div className="p-4 bg-primary/10 rounded-lg">
-                  <p className="text-caption text-deep mb-1">Delivered</p>
-                  <p className="text-h2 text-primary">{messaging.delivered?.toLocaleString() || 0}</p>
-                </div>
-                <div className="p-4 bg-danger/10 rounded-lg">
-                  <p className="text-caption text-deep mb-1">Failed</p>
-                  <p className="text-h2 text-danger">{messaging.failed?.toLocaleString() || 0}</p>
-                </div>
-              </div>
+            {/* Revenue Reports */}
+            <TabsContent value="revenue">
+               {/* CHANGED: Increased space-y-8 */}
+               <div className="space-y-8">
+                 <Card className="p-6">
+                  {/* CHANGED: Increased mb-6 */}
+                   <h2 className="text-h3 mb-6">Revenue Attribution</h2>
+                   {/* CHANGED: Increased gap-6 and mb-8 */}
+                   <div className="grid grid-cols-1 gap-6 md:grid-cols-4 mb-8">
+                     <div className="p-4 bg-muted rounded-lg">
+                       <p className="text-caption text-gray-600 mb-1">Total Revenue</p>
+                       <p className="text-h2 text-deep">{formatCurrency(revenue.total)}</p>
+                     </div>
+                     <div className="p-4 bg-primary/10 rounded-lg">
+                       <p className="text-caption text-deep mb-1">From Campaigns</p>
+                       <p className="text-h2 text-primary">{formatCurrency(revenue.fromCampaigns)}</p>
+                     </div>
+                     <div className="p-4 bg-secondary/10 rounded-lg">
+                       <p className="text-caption text-deep mb-1">From Automations</p>
+                       <p className="text-h2 text-secondary">{formatCurrency(revenue.fromAutomations)}</p>
+                     </div>
+                     <div className="p-4 bg-accent/10 rounded-lg">
+                       <p className="text-caption text-deep mb-1">ROI</p>
+                       <p className="text-h2 text-accent">{revenue.roi || "0x"}</p>
+                     </div>
+                   </div>
 
-              {/* Delivery Timeline */}
-              {messaging.timeline && messaging.timeline.length > 0 && (
-                <div>
-                  <h3 className="text-body font-semibold text-deep mb-3">Delivery Over Time</h3>
-                  <div className="space-y-2">
-                    {messaging.timeline.map((period, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-3 p-3 bg-muted rounded-lg"
-                      >
-                        <p className="text-caption text-gray-600 w-24">{period.date}</p>
-                        <div className="flex-1">
-                          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-primary rounded-full"
-                              style={{ width: `${period.deliveryRate || 0}%` }}
-                            />
-                          </div>
-                        </div>
-                        <p className="text-caption font-medium text-deep w-20 text-right">
-                          {period.sent?.toLocaleString() || 0} sent
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          {/* Revenue Reports */}
-          <TabsContent value="revenue">
-            <div className="space-y-6">
-              <div className="bg-surface rounded-xl shadow-subtle border border-border p-6">
-                <h2 className="text-h3 mb-4">Revenue Attribution</h2>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-4 mb-6">
-                  <div className="p-4 bg-muted rounded-lg">
-                    <p className="text-caption text-gray-600 mb-1">Total Revenue</p>
-                    <p className="text-h2 text-deep">${revenue.total?.toFixed(2) || "0.00"}</p>
-                  </div>
-                  <div className="p-4 bg-primary/10 rounded-lg">
-                    <p className="text-caption text-deep mb-1">From Campaigns</p>
-                    <p className="text-h2 text-primary">${revenue.fromCampaigns?.toFixed(2) || "0.00"}</p>
-                  </div>
-                  <div className="p-4 bg-secondary/10 rounded-lg">
-                    <p className="text-caption text-deep mb-1">From Automations</p>
-                    <p className="text-h2 text-secondary">${revenue.fromAutomations?.toFixed(2) || "0.00"}</p>
-                  </div>
-                  <div className="p-4 bg-accent/10 rounded-lg">
-                    <p className="text-caption text-deep mb-1">ROI</p>
-                    <p className="text-h2 text-accent">{revenue.roi || "0x"}</p>
-                  </div>
-                </div>
-
-                {/* Cost Breakdown */}
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mt-6">
-                  <div className="p-4 bg-muted rounded-lg">
-                    <p className="text-caption text-gray-600 mb-2">Total Spent</p>
-                    <p className="text-h2 text-deep mb-1">${revenue.spent?.toFixed(2) || "0.00"}</p>
-                    <p className="text-caption text-gray-600">
-                      Avg. cost per SMS: ${revenue.avgCostPerSMS?.toFixed(4) || "0.00"}
-                    </p>
-                  </div>
-                  <div className="p-4 bg-primary/10 rounded-lg">
-                    <p className="text-caption text-deep mb-2">Net Profit</p>
-                    <p className="text-h2 text-primary mb-1">
-                      ${((revenue.total || 0) - (revenue.spent || 0)).toFixed(2)}
-                    </p>
-                    <p className="text-caption text-deep">
-                      Profit margin: {revenue.profitMargin || "0%"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </main>
+                   {/* Cost Breakdown */}
+                   {/* CHANGED: Increased gap-6 and mt-8 */}
+                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2 mt-8">
+                     <div className="p-4 bg-muted rounded-lg">
+                       <p className="text-caption text-gray-600 mb-2">Total Spent</p>
+                       <p className="text-h2 text-deep mb-1">{formatCurrency(revenue.spent)}</p>
+                       <p className="text-caption text-gray-600">
+                         Avg. cost per SMS: {formatCurrency(revenue.avgCostPerSMS)}
+                       </p>
+                     </div>
+                     <div className="p-4 bg-primary/10 rounded-lg">
+                       <p className="text-caption text-deep mb-2">Net Profit</p>
+                       <p className="text-h2 text-primary mb-1">
+                         {formatCurrency((revenue.total || 0) - (revenue.spent || 0))}
+                       </p>
+                       <p className="text-caption text-deep">
+                         Profit margin: {revenue.profitMargin || "0%"}
+                       </p>
+                     </div>
+                   </div>
+                 </Card>
+               </div>
+            </TabsContent>
+          </Tabs>
+        </PageSection>
+      </PageContent>
 
       {/* Export Modal */}
       <Modal
@@ -530,14 +570,16 @@ export default function ReportsPage() {
             <Button
               variant="primary"
               onClick={handleExportReports}
-              disabled={loading}
+              disabled={isSubmitting} // Use fetcher state
             >
-              {loading ? <LoadingSpinner size="sm" /> : 'Export Reports'}
+              {isSubmitting ? <LoadingSpinner size="sm" className="mr-2" /> : <Icon name="download" size="sm" className="mr-2" />}
+               Export Reports
             </Button>
           </>
         }
       >
-        <div className="space-y-4">
+        {/* CHANGED: Increased space-y-6 */}
+        <div className="space-y-6"> 
           <div>
             <Label htmlFor="exportFormat">Export Format</Label>
             <Select
@@ -554,13 +596,14 @@ export default function ReportsPage() {
 
           <div>
             <Label>Include Data</Label>
-            <div className="space-y-2 mt-2">
+            {/* CHANGED: Increased space-y-3 */}
+            <div className="space-y-3 mt-2"> 
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={exportData.campaigns}
                   onChange={(e) => setExportData({ ...exportData, campaigns: e.target.checked })}
-                  className="rounded border-gray-300"
+                  className="rounded border-gray-300 text-primary focus:ring-primary"
                 />
                 <span className="text-sm">Campaign Performance</span>
               </label>
@@ -569,7 +612,7 @@ export default function ReportsPage() {
                   type="checkbox"
                   checked={exportData.automations}
                   onChange={(e) => setExportData({ ...exportData, automations: e.target.checked })}
-                  className="rounded border-gray-300"
+                  className="rounded border-gray-300 text-primary focus:ring-primary"
                 />
                 <span className="text-sm">Automation Analytics</span>
               </label>
@@ -578,7 +621,7 @@ export default function ReportsPage() {
                   type="checkbox"
                   checked={exportData.messaging}
                   onChange={(e) => setExportData({ ...exportData, messaging: e.target.checked })}
-                  className="rounded border-gray-300"
+                  className="rounded border-gray-300 text-primary focus:ring-primary"
                 />
                 <span className="text-sm">Messaging Activity</span>
               </label>
@@ -587,7 +630,7 @@ export default function ReportsPage() {
                   type="checkbox"
                   checked={exportData.revenue}
                   onChange={(e) => setExportData({ ...exportData, revenue: e.target.checked })}
-                  className="rounded border-gray-300"
+                  className="rounded border-gray-300 text-primary focus:ring-primary"
                 />
                 <span className="text-sm">Revenue Attribution</span>
               </label>

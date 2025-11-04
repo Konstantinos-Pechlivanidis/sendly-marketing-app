@@ -12,32 +12,33 @@ export const loader = async ({ request }) => {
     const sortBy = url.searchParams.get("sortBy") || "name";
     const sortOrder = url.searchParams.get("sortOrder") || "asc";
 
-    const [automations, stats, triggers] = await Promise.all([
-      serverApi.get(request, `/api/automations?status=${status}&type=${type}&search=${search}&sortBy=${sortBy}&sortOrder=${sortOrder}`).catch(() => ({ data: [] })),
-      serverApi.get(request, "/api/automations/stats").catch(() => ({ data: {} })),
-      serverApi.get(request, "/api/automations/triggers").catch(() => ({ data: [] })),
+    const [automations, stats] = await Promise.all([
+      serverApi.get(request, `/automations?status=${status}&type=${type}&search=${search}&sortBy=${sortBy}&sortOrder=${sortOrder}`).catch(() => ({ success: false, data: { automations: [] } })),
+      serverApi.get(request, "/automations/stats").catch(() => ({ success: false, data: {} })),
     ]);
     
+    // Backend returns { success: true, data: {...} }
+    // eslint-disable-next-line no-undef
+    const isDevelopment = process.env.NODE_ENV === "development";
     return { 
-      automations, 
-      stats, 
-      triggers,
-      debug: {
+      automations: automations?.data || { automations: [] }, 
+      stats: stats?.data || {},
+      debug: isDevelopment ? {
         sessionId: session?.id,
         shop: session?.shop,
         timestamp: new Date().toISOString()
-      }
+      } : undefined
     };
   } catch (error) {
-    console.error("Automations loader error:", error);
+    // eslint-disable-next-line no-undef
+    const isDevelopment = process.env.NODE_ENV === "development";
     return { 
-      automations: { data: [] }, 
-      stats: { data: {} },
-      triggers: { data: [] },
-      debug: {
+      automations: { automations: [] }, 
+      stats: {},
+      debug: isDevelopment ? {
         error: error.message,
         timestamp: new Date().toISOString()
-      }
+      } : undefined
     };
   }
 };
@@ -47,66 +48,25 @@ export const action = async ({ request }) => {
   const action = formData.get("_action");
   
   try {
-    const { session } = await authenticate.admin(request);
+    await authenticate.admin(request);
     
     switch (action) {
-      case "createAutomation":
-        return await serverApi.post(request, "/api/automations", {
-          name: formData.get("name"),
-          type: formData.get("type"),
-          message: formData.get("message"),
-          trigger: formData.get("trigger"),
-          schedule: JSON.parse(formData.get("schedule") || "{}"),
-          conditions: JSON.parse(formData.get("conditions") || "[]"),
-          shop: session?.shop
-        });
-      
       case "updateAutomation":
-        return await serverApi.put(request, `/api/automations/${formData.get("id")}`, {
-          name: formData.get("name"),
-          message: formData.get("message"),
-          schedule: JSON.parse(formData.get("schedule") || "{}"),
-          conditions: JSON.parse(formData.get("conditions") || "[]"),
-          shop: session?.shop
-        });
-      
-      case "deleteAutomation":
-        return await serverApi.delete(request, `/api/automations/${formData.get("id")}`, {
-          shop: session?.shop
-        });
-      
-      case "toggleAutomation":
-        return await serverApi.post(request, `/api/automations/${formData.get("id")}/toggle`, {
-          enabled: formData.get("enabled") === "true",
-          shop: session?.shop
-        });
-      
-      case "resetAutomation":
-        return await serverApi.post(request, `/api/automations/${formData.get("id")}/reset`, {
-          shop: session?.shop
-        });
-      
-      case "testAutomation":
-        return await serverApi.post(request, `/api/automations/${formData.get("id")}/test`, {
-          shop: session?.shop
-        });
-      
-      case "duplicateAutomation":
-        return await serverApi.post(request, `/api/automations/${formData.get("id")}/duplicate`, {
-          shop: session?.shop
-        });
-      
-      case "exportAutomations":
-        return await serverApi.get(request, "/api/automations/export", {
-          shop: session?.shop
+        // Backend only supports updating userMessage and isActive
+        return await serverApi.put(request, `/automations/${formData.get("id")}`, {
+          userMessage: formData.get("userMessage") || formData.get("message"),
+          isActive: formData.get("isActive") === "true"
         });
       
       default:
         return { error: "Unknown action" };
     }
   } catch (error) {
-    console.error("Automations action error:", error);
-    return { error: error.message };
+    return { 
+      success: false, 
+      error: error.message || "Unknown error",
+      message: error.message || "Failed to process automation action"
+    };
   }
 };
 

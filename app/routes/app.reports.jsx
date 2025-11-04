@@ -12,47 +12,58 @@ export const loader = async ({ request }) => {
     const sortBy = url.searchParams.get("sortBy") || "date";
     const sortOrder = url.searchParams.get("sortOrder") || "desc";
 
-    const [overview, kpis, campaigns, automations, credits, contacts, messaging, revenue] = await Promise.all([
-      serverApi.get(request, `/api/reports/overview?dateRange=${dateRange}`).catch(() => ({ data: {} })),
-      serverApi.get(request, `/api/reports/kpis?dateRange=${dateRange}`).catch(() => ({ data: {} })),
-      serverApi.get(request, `/api/reports/campaigns?dateRange=${dateRange}&type=${campaignType}&sortBy=${sortBy}&sortOrder=${sortOrder}`).catch(() => ({ data: {} })),
-      serverApi.get(request, `/api/reports/automations?dateRange=${dateRange}&type=${automationType}&sortBy=${sortBy}&sortOrder=${sortOrder}`).catch(() => ({ data: {} })),
-      serverApi.get(request, `/api/reports/credits?dateRange=${dateRange}`).catch(() => ({ data: {} })),
-      serverApi.get(request, `/api/reports/contacts?dateRange=${dateRange}`).catch(() => ({ data: {} })),
-      serverApi.get(request, `/api/reports/messaging?dateRange=${dateRange}`).catch(() => ({ data: {} })),
-      serverApi.get(request, `/api/reports/revenue?dateRange=${dateRange}`).catch(() => ({ data: {} })),
+    // Parse date range to from/to dates
+    const toDate = new Date();
+    const fromDate = new Date();
+    if (dateRange === "7d") {
+      fromDate.setDate(fromDate.getDate() - 7);
+    } else if (dateRange === "30d") {
+      fromDate.setDate(fromDate.getDate() - 30);
+    } else if (dateRange === "90d") {
+      fromDate.setDate(fromDate.getDate() - 90);
+    }
+    const from = fromDate.toISOString().split('T')[0];
+    const to = toDate.toISOString().split('T')[0];
+
+    const [overview, campaigns, automations, credits, contacts, messaging] = await Promise.all([
+      serverApi.get(request, `/reports/overview?from=${from}&to=${to}`).catch(() => ({ success: false, data: {} })),
+      serverApi.get(request, `/reports/campaigns?from=${from}&to=${to}`).catch(() => ({ success: false, data: {} })),
+      serverApi.get(request, `/reports/automations?from=${from}&to=${to}`).catch(() => ({ success: false, data: {} })),
+      serverApi.get(request, `/reports/credits?from=${from}&to=${to}`).catch(() => ({ success: false, data: {} })),
+      serverApi.get(request, `/reports/contacts?from=${from}&to=${to}`).catch(() => ({ success: false, data: {} })),
+      serverApi.get(request, `/reports/messaging?from=${from}&to=${to}`).catch(() => ({ success: false, data: {} })),
     ]);
     
+    // Backend returns { success: true, data: {...} }
+    // eslint-disable-next-line no-undef
+    const isDevelopment = process.env.NODE_ENV === "development";
     return { 
-      overview, 
-      kpis, 
-      campaigns, 
-      automations, 
-      credits, 
-      contacts, 
-      messaging, 
-      revenue,
-      debug: {
+      overview: overview?.data || {}, 
+      campaigns: campaigns?.data || {}, 
+      automations: automations?.data || {}, 
+      credits: credits?.data || {}, 
+      contacts: contacts?.data || {}, 
+      messaging: messaging?.data || {},
+      debug: isDevelopment ? {
         sessionId: session?.id,
         shop: session?.shop,
         timestamp: new Date().toISOString()
-      }
+      } : undefined
     };
   } catch (error) {
-    console.error("Reports loader error:", error);
+    // eslint-disable-next-line no-undef
+    const isDevelopment = process.env.NODE_ENV === "development";
     return {
-      overview: { data: {} },
-      kpis: { data: {} },
-      campaigns: { data: {} },
-      automations: { data: {} },
-      credits: { data: {} },
-      contacts: { data: {} },
-      messaging: { data: {} },
-      revenue: { data: {} },
-      debug: {
+      overview: {},
+      campaigns: {},
+      automations: {},
+      credits: {},
+      contacts: {},
+      messaging: {},
+      debug: isDevelopment ? {
         error: error.message,
         timestamp: new Date().toISOString()
-      }
+      } : undefined
     };
   }
 };
@@ -62,44 +73,24 @@ export const action = async ({ request }) => {
   const action = formData.get("_action");
   
   try {
-    const { session } = await authenticate.admin(request);
+    await authenticate.admin(request);
     
     switch (action) {
-      case "refreshReports":
-        return await serverApi.post(request, "/api/reports/refresh", {
-          dateRange: formData.get("dateRange"),
-          shop: session?.shop
-        });
-      
-      case "exportReports":
-        return await serverApi.get(request, "/api/reports/export", {
-          format: formData.get("format"),
-          dateRange: formData.get("dateRange"),
-          campaigns: formData.get("campaigns") === "true",
-          automations: formData.get("automations") === "true",
-          messaging: formData.get("messaging") === "true",
-          revenue: formData.get("revenue") === "true",
-          shop: session?.shop
-        });
-      
-      case "scheduleReport":
-        return await serverApi.post(request, "/api/reports/schedule", {
-          dateRange: formData.get("dateRange"),
-          frequency: formData.get("frequency"),
-          shop: session?.shop
-        });
-      
-      case "updateSystemHealth":
-        return await serverApi.post(request, "/api/reports/system-health/update", {
-          shop: session?.shop
-        });
+      case "exportReports": {
+        const fromDate = formData.get("from");
+        const toDate = formData.get("to");
+        return await serverApi.get(request, `/reports/export?type=${formData.get("type") || "campaigns"}&format=${formData.get("format") || "csv"}&from=${fromDate}&to=${toDate}`);
+      }
       
       default:
         return { error: "Unknown action" };
     }
   } catch (error) {
-    console.error("Reports action error:", error);
-    return { error: error.message };
+    return { 
+      success: false, 
+      error: error.message || "Unknown error",
+      message: error.message || "Failed to process reports action"
+    };
   }
 };
 

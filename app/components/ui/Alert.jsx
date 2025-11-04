@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 /**
  * Alert Component - Status messages and alerts
  */
@@ -13,28 +14,28 @@ export function Alert({
     success: {
       bg: 'bg-green-50',
       border: 'border-green-200',
-      icon: '✅',
+      icon: 'success',
       iconColor: 'text-green-500',
       textColor: 'text-green-800'
     },
     error: {
       bg: 'bg-red-50',
       border: 'border-red-200',
-      icon: '❌',
+      icon: 'error',
       iconColor: 'text-red-500',
       textColor: 'text-red-800'
     },
     warning: {
       bg: 'bg-yellow-50',
       border: 'border-yellow-200',
-      icon: '⚠️',
+      icon: 'warning',
       iconColor: 'text-yellow-500',
       textColor: 'text-yellow-800'
     },
     info: {
       bg: 'bg-blue-50',
       border: 'border-blue-200',
-      icon: 'ℹ️',
+      icon: 'info',
       iconColor: 'text-blue-500',
       textColor: 'text-blue-800'
     }
@@ -45,7 +46,6 @@ export function Alert({
   return (
     <div className={`${style.bg} ${style.border} border rounded-lg p-4 ${className}`}>
       <div className="flex items-start">
-        <span className="text-2xl mr-3">{style.icon}</span>
         <div className="flex-1">
           {title && (
             <h3 className={`font-semibold ${style.textColor} mb-1`}>

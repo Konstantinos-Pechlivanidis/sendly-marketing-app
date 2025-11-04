@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import { cn } from "../../utils/cn";
+import { Icon } from "./Icon";
 
 const Stat = forwardRef(({ 
   className,
@@ -17,9 +18,9 @@ const Stat = forwardRef(({
   };
 
   const deltaIcons = {
-    positive: "↗",
-    negative: "↘",
-    neutral: "→",
+    positive: "arrowUp",
+    negative: "arrowDown", 
+    neutral: "arrowRight",
   };
 
   return (
@@ -48,7 +49,7 @@ const Stat = forwardRef(({
             "flex items-center space-x-1 text-sm font-medium",
             deltaVariants[deltaType]
           )}>
-            <span>{deltaIcons[deltaType]}</span>
+            <Icon name={deltaIcons[deltaType]} size="sm" />
             <span>{delta}</span>
           </div>
         )}
