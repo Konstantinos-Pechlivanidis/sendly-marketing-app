@@ -6,11 +6,13 @@ export const loader = async ({ request }) => {
   try {
     const { session } = await authenticate.admin(request);
 
-    const [balance, transactions, packages, settings] = await Promise.all([
+    const [balance, transactions, billingHistory, packages, settings, account] = await Promise.all([
       serverApi.get(request, "/billing/balance").catch(() => ({ success: false, data: {} })),
       serverApi.get(request, "/billing/history").catch(() => ({ success: false, data: { transactions: [], pagination: {} } })),
+      serverApi.get(request, "/billing/billing-history").catch(() => ({ success: false, data: { transactions: [], pagination: {} } })),
       serverApi.get(request, "/billing/packages").catch(() => ({ success: false, data: [] })),
       serverApi.get(request, "/settings").catch(() => ({ success: false, data: {} })),
+      serverApi.get(request, "/settings/account").catch(() => ({ success: false, data: {} })),
     ]);
     
     // Backend returns { success: true, data: {...} }
@@ -19,8 +21,10 @@ export const loader = async ({ request }) => {
     return { 
       balance: balance?.data || {}, 
       transactions: transactions?.data || { transactions: [], pagination: {} }, 
-      packages: packages?.data || [], 
+      billingHistory: billingHistory?.data || { transactions: [], pagination: {} },
+      packages: Array.isArray(packages?.data) ? packages.data : packages?.data?.packages || [], 
       settings: settings?.data || {},
+      account: account?.data || {},
       debug: isDevelopment ? {
         sessionId: session?.id,
         shop: session?.shop,
@@ -33,8 +37,10 @@ export const loader = async ({ request }) => {
     return {
       balance: {},
       transactions: { transactions: [], pagination: {} },
+      billingHistory: { transactions: [], pagination: {} },
       packages: [],
       settings: {},
+      account: {},
       debug: isDevelopment ? {
         error: error.message,
         timestamp: new Date().toISOString()
@@ -60,8 +66,8 @@ export const action = async ({ request }) => {
       
       case "saveSettings":
         return await serverApi.put(request, "/settings/sender", {
-          senderNumber: formData.get("senderNumber"),
-          senderName: formData.get("senderName")
+          senderNumber: formData.get("senderNumber") || formData.get("providerApiKey"),
+          senderName: formData.get("senderName") || formData.get("senderId")
         });
       
       default:

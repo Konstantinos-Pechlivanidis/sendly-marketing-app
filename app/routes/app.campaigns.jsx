@@ -1,22 +1,30 @@
 import { serverApi } from "../utils/api.server";
 import { authenticate } from "../shopify.server";
+import { buildQueryString, getPaginationParams } from "../utils/query-params.server";
 import CampaignsPage from "./pages/campaigns";
 
 export const loader = async ({ request }) => {
   try {
     const { session } = await authenticate.admin(request);
     const url = new URL(request.url);
-    const page = url.searchParams.get("page") || "1";
-    const pageSize = url.searchParams.get("pageSize") || "20";
-    const status = url.searchParams.get("status") || "";
-    const search = url.searchParams.get("search") || "";
-    const sortBy = url.searchParams.get("sortBy") || "createdAt";
-    const sortOrder = url.searchParams.get("sortOrder") || "desc";
+    
+    // Get pagination with defaults
+    const { page, pageSize } = getPaginationParams(request);
+    
+    // Build query parameters according to backend API spec
+    const queryParams = buildQueryString({
+      page,
+      pageSize,
+      status: url.searchParams.get("status") || undefined,
+      sortBy: url.searchParams.get("sortBy") || "createdAt",
+      sortOrder: url.searchParams.get("sortOrder") || "desc",
+    });
 
-    const [campaigns, stats, audiences] = await Promise.all([
-      serverApi.get(request, `/campaigns?page=${page}&pageSize=${pageSize}&status=${status}&search=${search}&sortBy=${sortBy}&sortOrder=${sortOrder}`).catch(() => ({ success: false, data: { campaigns: [], pagination: {} } })),
+    const [campaigns, stats, audiences, discounts] = await Promise.all([
+      serverApi.get(request, `/campaigns?${queryParams}`).catch(() => ({ success: false, data: { campaigns: [], pagination: {} } })),
       serverApi.get(request, "/campaigns/stats/summary").catch(() => ({ success: false, data: {} })),
-      serverApi.get(request, "/audiences").catch(() => ({ success: false, data: { audiences: [] } })),
+      serverApi.get(request, "/audiences").catch(() => ({ success: false, data: [] })),
+      serverApi.get(request, "/discounts?status=active").catch(() => ({ success: false, data: { discounts: [] } })),
     ]);
     
     // Backend returns { success: true, data: {...} }
@@ -25,7 +33,8 @@ export const loader = async ({ request }) => {
     return { 
       campaigns: campaigns?.data || { campaigns: [], pagination: {} }, 
       stats: stats?.data || {}, 
-      audiences: audiences?.data || { audiences: [] },
+      audiences: Array.isArray(audiences?.data) ? audiences.data : audiences?.data?.audiences || [],
+      discounts: discounts?.data?.discounts || discounts?.data || [],
       debug: isDevelopment ? {
         sessionId: session?.id,
         shop: session?.shop,
@@ -55,8 +64,8 @@ export const action = async ({ request }) => {
     await authenticate.admin(request);
     
     switch (action) {
-      case "createCampaign":
-        return await serverApi.post(request, "/campaigns", {
+      case "createCampaign": {
+        const result = await serverApi.post(request, "/campaigns", {
           name: formData.get("name"),
           message: formData.get("message"),
           audience: formData.get("audience") || formData.get("audienceId") || "all",
@@ -65,6 +74,9 @@ export const action = async ({ request }) => {
           scheduleAt: formData.get("scheduleAt") || null,
           recurringDays: formData.get("recurringDays") ? parseInt(formData.get("recurringDays")) : null
         });
+        // Return success response for React Router to handle
+        return result;
+      }
       
       case "updateCampaign":
         return await serverApi.put(request, `/campaigns/${formData.get("id")}`, {
@@ -74,19 +86,24 @@ export const action = async ({ request }) => {
           discountId: formData.get("discountId") || null
         });
       
-      case "deleteCampaign":
-        return await serverApi.delete(request, `/campaigns/${formData.get("id")}`);
+      case "deleteCampaign": {
+        const result = await serverApi.delete(request, `/campaigns/${formData.get("id")}`);
+        return result;
+      }
       
       case "prepareCampaign":
         return await serverApi.post(request, `/campaigns/${formData.get("id")}/prepare`);
       
-      case "sendCampaign":
-        return await serverApi.post(request, `/campaigns/${formData.get("id")}/send`);
+      case "sendCampaign": {
+        const result = await serverApi.post(request, `/campaigns/${formData.get("id")}/send`);
+        return result;
+      }
       
       case "scheduleCampaign":
         return await serverApi.put(request, `/campaigns/${formData.get("id")}/schedule`, {
           scheduleType: formData.get("scheduleType") || "scheduled",
-          scheduleAt: formData.get("scheduleAt")
+          scheduleAt: formData.get("scheduleAt"),
+          recurringDays: formData.get("recurringDays") ? parseInt(formData.get("recurringDays")) : null
         });
       
       default:

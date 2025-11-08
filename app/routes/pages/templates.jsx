@@ -46,13 +46,13 @@ export default function TemplatesPage() {
   // Handle fetcher responses for alerts
   useEffect(() => {
     if (fetcher.state === 'idle' && fetcher.data) {
-      const { success, message, error } = fetcher.data;
-      if (success) {
+      const responseData = fetcher.data?.data || fetcher.data;
+      const { success, message, error } = responseData;
+      
+      if (success !== false) {
         setAlert({ type: 'success', message: message || 'Action completed successfully!' });
-        // Consider triggering a re-fetch or reload here if data changes significantly
-        // fetcher.load(window.location.pathname); // Example re-fetch
       } else {
-        setAlert({ type: 'error', message: error || 'An error occurred.' });
+        setAlert({ type: 'error', message: error || message || 'An error occurred.' });
       }
     }
   }, [fetcher.state, fetcher.data]);
@@ -62,10 +62,16 @@ export default function TemplatesPage() {
     setSelectedTemplate(template);
     setIsPreviewModalOpen(true);
     try {
-      // Fire-and-forget tracking
-      api.templates.track(template.id);
+      // Track template usage via server-side action
+      const submitData = new FormData();
+      submitData.append("_action", "trackTemplateUsage");
+      submitData.append("id", template.id);
+      fetcher.submit(submitData, { method: "post" });
     } catch (error) {
-      console.error('Failed to track template view:', error);
+      // eslint-disable-next-line no-undef
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to track template view:', error);
+      }
     }
   };
 
@@ -83,27 +89,21 @@ export default function TemplatesPage() {
           setAlert({ type: 'success', message: 'Template copied to clipboard!' });
           closePreviewModal();
         })
-        .catch(err => {
+        .catch(() => {
           setAlert({ type: 'error', message: 'Failed to copy template.' });
-          console.error('Clipboard copy failed:', err);
         });
     } else {
        setAlert({ type: 'warning', message: 'No content to copy for this template.' });
     }
   };
 
-  // Submit template creation
+  // Note: Backend doesn't support creating custom templates
+  // Templates are pre-defined system templates
   const handleCreateTemplate = async () => {
-    fetcher.submit(
-      {
-        _action: "createTemplate",
-        ...formData,
-        tags: JSON.stringify(formData.tags || []),
-        variables: JSON.stringify(formData.variables || [])
-      },
-      { method: "post" }
-    );
-    // Optimistic close & reset
+    setAlert({ 
+      type: 'info', 
+      message: 'Templates are pre-defined. You can use existing templates and customize them in campaigns.' 
+    });
     setIsCreateModalOpen(false);
     setFormData({ name: '', description: '', content: '', category: '', tags: [], variables: [] });
   };

@@ -6,12 +6,16 @@ export const loader = async ({ request }) => {
   try {
     const { session } = await authenticate.admin(request);
 
-    const [overview, quickStats] = await Promise.all([
+    const [overview, quickStats, health] = await Promise.all([
       serverApi.get(request, "/dashboard/overview").catch((err) => {
         return { success: false, data: { message: "API not available", error: err.message } };
       }),
       serverApi.get(request, "/dashboard/quick-stats").catch((err) => {
         return { success: false, data: { message: "API not available", error: err.message } };
+      }),
+      // Get full health check for dashboard
+      serverApi.get(request, "/health/full").catch(() => {
+        return { success: false, data: { ok: false } };
       }),
     ]);
     
@@ -22,6 +26,7 @@ export const loader = async ({ request }) => {
     return { 
       overview: overview?.data || overview || {}, 
       quickStats: quickStats?.data || quickStats || {},
+      health: health?.data || health || { ok: false },
       debug: isDevelopment ? {
         sessionId: session?.id,
         shop: session?.shop,
@@ -32,14 +37,15 @@ export const loader = async ({ request }) => {
   } catch (error) {
     // eslint-disable-next-line no-undef
     const isDevelopment = process.env.NODE_ENV === "development";
-    return {
-      overview: {},
-      quickStats: {},
-      debug: isDevelopment ? {
-        error: error.message,
-        timestamp: new Date().toISOString()
-      } : undefined
-    };
+      return {
+        overview: {},
+        quickStats: {},
+        health: { ok: false },
+        debug: isDevelopment ? {
+          error: error.message,
+          timestamp: new Date().toISOString()
+        } : undefined
+      };
   }
 };
 

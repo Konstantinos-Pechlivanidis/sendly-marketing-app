@@ -1,22 +1,32 @@
 import { serverApi } from "../utils/api.server";
 import { authenticate } from "../shopify.server";
+import { buildQueryString, getPaginationParams } from "../utils/query-params.server";
 import ContactsPage from "./pages/contacts";
 
 export const loader = async ({ request }) => {
   try {
     const { session } = await authenticate.admin(request);
     const url = new URL(request.url);
-    const page = url.searchParams.get("page") || "1";
-    const pageSize = url.searchParams.get("pageSize") || "20";
-    const search = url.searchParams.get("search") || "";
-    const gender = url.searchParams.get("gender") || "";
-    const smsConsent = url.searchParams.get("smsConsent") || "";
-    const hasBirthDate = url.searchParams.get("hasBirthDate") || "";
-    const sortBy = url.searchParams.get("sortBy") || "createdAt";
-    const sortOrder = url.searchParams.get("sortOrder") || "desc";
+    
+    // Get pagination with defaults
+    const { page, pageSize } = getPaginationParams(request);
+    
+    // Build query parameters according to backend API spec
+    // Backend uses 'q' for search, not 'search'
+    const queryParams = buildQueryString({
+      page,
+      pageSize,
+      q: url.searchParams.get("search") || url.searchParams.get("q") || undefined,
+      filter: url.searchParams.get("filter") || undefined, // all, consented, nonconsented
+      gender: url.searchParams.get("gender") || undefined,
+      smsConsent: url.searchParams.get("smsConsent") || undefined,
+      hasBirthDate: url.searchParams.get("hasBirthDate") === "true" ? true : undefined,
+      sortBy: url.searchParams.get("sortBy") || "createdAt",
+      sortOrder: url.searchParams.get("sortOrder") || "desc",
+    });
 
     const [contacts, stats] = await Promise.all([
-      serverApi.get(request, `/contacts?page=${page}&pageSize=${pageSize}&search=${search}&gender=${gender}&smsConsent=${smsConsent}&hasBirthDate=${hasBirthDate}&sortBy=${sortBy}&sortOrder=${sortOrder}`).catch(() => ({ success: false, data: { contacts: [], pagination: {} } })),
+      serverApi.get(request, `/contacts?${queryParams}`).catch(() => ({ success: false, data: { contacts: [], pagination: {} } })),
       serverApi.get(request, "/contacts/stats").catch(() => ({ success: false, data: {} })),
     ]);
     
@@ -81,11 +91,14 @@ export const action = async ({ request }) => {
       case "deleteContact":
         return await serverApi.delete(request, `/contacts/${formData.get("id")}`);
       
-      case "importContacts":
+      case "importContacts": {
         const contacts = JSON.parse(formData.get("contacts") || "[]");
-        return await serverApi.post(request, "/contacts/import", {
-          contacts
+        const result = await serverApi.post(request, "/contacts/import", {
+          contacts,
+          skipDuplicates: true
         });
+        return result;
+      }
       
       default:
         return { error: "Unknown action" };

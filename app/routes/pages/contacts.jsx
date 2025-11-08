@@ -1,4 +1,4 @@
-import { useLoaderData } from "react-router";
+import { useLoaderData, useSubmit, useActionData } from "react-router";
 import { useState, useEffect } from "react";
 import { Input, Label } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
@@ -18,6 +18,8 @@ import { api } from "../../utils/api.client";
 
 export default function ContactsPage() {
   const data = useLoaderData();
+  const submit = useSubmit();
+  const actionData = useActionData();
   const [contacts, setContacts] = useState([]);
   const [alert, setAlert] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -62,95 +64,135 @@ export default function ContactsPage() {
     setContacts(initialContacts);
   }, [data]);
 
+  // Handle action responses
+  useEffect(() => {
+    if (actionData) {
+      if (actionData.success) {
+        // Success is already handled by individual handlers
+        // This can be used for additional handling if needed
+      } else if (actionData.error) {
+        setAlert({ type: 'error', message: actionData.message || actionData.error || 'An error occurred' });
+      }
+    }
+  }, [actionData]);
+
   const handleCreateContact = async () => {
-    // Build payload as per backend API
-    const payload = {
-      phoneE164: formData.phone
-    };
-    if (formData.firstName) payload.firstName = formData.firstName;
-    if (formData.lastName) payload.lastName = formData.lastName;
-    if (formData.email) payload.email = formData.email;
-    if (formData.gender) payload.gender = formData.gender;
-    if (formData.birthDate) payload.birthDate = formData.birthDate;
+    // Use server-side action instead of client API
+    const submitData = new FormData();
+    submitData.append("_action", "createContact");
+    submitData.append("phoneE164", formData.phone);
+    if (formData.firstName) submitData.append("firstName", formData.firstName);
+    if (formData.lastName) submitData.append("lastName", formData.lastName);
+    if (formData.email) submitData.append("email", formData.email);
+    if (formData.gender) submitData.append("gender", formData.gender);
+    if (formData.birthDate) submitData.append("birthDate", formData.birthDate);
     if (typeof formData.smsConsent !== 'undefined' && formData.smsConsent !== null) {
-      payload.smsConsent = formData.smsConsent === true || formData.smsConsent === 'opted_in' ? 'opted_in' : (formData.smsConsent === 'opted_out' ? 'opted_out' : 'unknown');
+      const consent = formData.smsConsent === true || formData.smsConsent === 'opted_in' ? 'opted_in' : (formData.smsConsent === 'opted_out' ? 'opted_out' : 'unknown');
+      submitData.append("smsConsent", consent);
     }
-    // You can add tags if present in the form UI (handle if array)
-    if (Array.isArray(formData.tags)) payload.tags = formData.tags;
-    try {
-      console.log('[CONTACT CREATE] Sending payload:', payload);
-      const resp = await api.contacts.create(payload);
-      console.log('[CONTACT CREATE] Response:', resp);
-      setAlert({ type: 'success', message: 'Contact created successfully!' });
-      closeModal();
-      window.location.reload();
-    } catch (error) {
-      console.error('[CONTACT CREATE ERROR]', error);
-      setAlert({ type: 'error', message: `Failed to create contact: ${error.message}` });
+    if (Array.isArray(formData.tags)) {
+      submitData.append("tags", JSON.stringify(formData.tags));
     }
+    
+    submit(submitData, { method: "post" });
+    setAlert({ type: 'success', message: 'Contact created successfully!' });
+    closeModal();
   };
 
   const handleUpdateContact = async () => {
-    try {
-      await api.contacts.update(editingContact.id, formData);
-      setAlert({ type: 'success', message: 'Contact updated successfully!' });
-      closeModal();
-      window.location.reload();
-    } catch (error) {
-      setAlert({ type: 'error', message: `Failed to update contact: ${error.message}` });
+    // Use server-side action instead of client API
+    const submitData = new FormData();
+    submitData.append("_action", "updateContact");
+    submitData.append("id", editingContact.id);
+    if (formData.firstName) submitData.append("firstName", formData.firstName);
+    if (formData.lastName) submitData.append("lastName", formData.lastName);
+    if (formData.phone) submitData.append("phoneE164", formData.phone);
+    if (formData.email) submitData.append("email", formData.email);
+    if (formData.gender) submitData.append("gender", formData.gender);
+    if (formData.birthDate) submitData.append("birthDate", formData.birthDate);
+    if (formData.smsConsent) submitData.append("smsConsent", formData.smsConsent);
+    if (Array.isArray(formData.tags)) {
+      submitData.append("tags", JSON.stringify(formData.tags));
     }
+    
+    submit(submitData, { method: "post" });
+    setAlert({ type: 'success', message: 'Contact updated successfully!' });
+    closeModal();
   };
 
   const handleDeleteContact = async (contactId) => {
     if (!confirm('Are you sure you want to delete this contact?')) return;
 
-    try {
-      await api.contacts.delete(contactId);
-      setAlert({ type: 'success', message: 'Contact deleted successfully!' });
-      window.location.reload();
-    } catch (error) {
-      setAlert({ type: 'error', message: `Failed to delete contact: ${error.message}` });
-    }
+    // Use server-side action instead of client API
+    const submitData = new FormData();
+    submitData.append("_action", "deleteContact");
+    submitData.append("id", contactId);
+    
+    submit(submitData, { method: "post" });
+    setAlert({ type: 'success', message: 'Contact deleted successfully!' });
   };
 
   const handleBulkDelete = async () => {
     if (selectedContacts.length === 0) return;
     if (!confirm(`Are you sure you want to delete ${selectedContacts.length} contacts?`)) return;
 
-    setLoading(true);
-    try {
-      await Promise.all(selectedContacts.map(id => api.contacts.delete(id)));
-      setAlert({ type: 'success', message: `${selectedContacts.length} contacts deleted successfully!` });
-      setSelectedContacts([]);
-      window.location.reload();
-    } catch (error) {
-      setAlert({ type: 'error', message: `Failed to delete contacts: ${error.message}` });
-    } finally {
-      setLoading(false);
-    }
+    // Delete contacts one by one using server-side actions
+    // Note: Backend may need a bulk delete endpoint for better performance
+    selectedContacts.forEach((contactId) => {
+      const submitData = new FormData();
+      submitData.append("_action", "deleteContact");
+      submitData.append("id", contactId);
+      submit(submitData, { method: "post" });
+    });
+    
+    setAlert({ type: 'success', message: `${selectedContacts.length} contacts deleted successfully!` });
+    setSelectedContacts([]);
   };
 
   const handleImportContacts = async (csvData) => {
-    setLoading(true);
-    try {
-      await api.contacts.import({ contacts: csvData });
-      setAlert({ type: 'success', message: `${csvData.length} contacts imported successfully!` });
-      setIsImportModalOpen(false);
-      window.location.reload();
-    } catch (error) {
-      setAlert({ type: 'error', message: `Failed to import contacts: ${error.message}` });
-    } finally {
-      setLoading(false);
-    }
+    // Use server-side action for import
+    const submitData = new FormData();
+    submitData.append("_action", "importContacts");
+    submitData.append("contacts", JSON.stringify(csvData));
+    
+    submit(submitData, { method: "post" });
+    setAlert({ type: 'success', message: `${csvData.length} contacts imported successfully!` });
+    setIsImportModalOpen(false);
   };
 
   const handleExportContacts = async () => {
     setLoading(true);
     try {
-      const exportData = await api.contacts.export(filters);
-      // Create and download CSV
-      const csvContent = convertToCSV(exportData);
-      downloadCSV(csvContent, 'contacts.csv');
+      // Export contacts from current loaded data (client-side CSV generation)
+      // Backend doesn't have /contacts/export endpoint, so we generate CSV client-side
+      const csvHeaders = ['First Name', 'Last Name', 'Phone', 'Email', 'Gender', 'Birth Date', 'SMS Consent', 'Tags'];
+      const csvRows = contacts.map(contact => [
+        contact.firstName || '',
+        contact.lastName || '',
+        contact.phoneE164 || contact.phone || '',
+        contact.email || '',
+        contact.gender || '',
+        contact.birthDate ? new Date(contact.birthDate).toLocaleDateString() : '',
+        contact.smsConsent || 'unknown',
+        Array.isArray(contact.tags) ? contact.tags.join('; ') : ''
+      ]);
+      
+      const csvContent = [
+        csvHeaders.join(','),
+        ...csvRows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      ].join('\n');
+      
+      // Download CSV
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `contacts-export-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
       setAlert({ type: 'success', message: 'Contacts exported successfully!' });
     } catch (error) {
       setAlert({ type: 'error', message: `Failed to export contacts: ${error.message}` });

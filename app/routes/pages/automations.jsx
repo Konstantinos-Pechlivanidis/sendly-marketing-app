@@ -19,8 +19,10 @@ export default function AutomationsPage() {
   const data = useLoaderData();
   const fetcher = useFetcher();
   
-  const automations = data?.automations?.items || [];
-  const stats = data?.stats || {};
+  // Adapt to backend response structure
+  const automations = Array.isArray(data?.automations) ? data.automations : data?.automations?.items || [];
+  const stats = data?.stats?.data || data?.stats || {};
+  const defaults = Array.isArray(data?.defaults) ? data.defaults : [];
 
   const [selectedAutomation, setSelectedAutomation] = useState(null);
   const [editMode, setEditMode] = useState(false);
@@ -47,13 +49,14 @@ export default function AutomationsPage() {
    // Handle fetcher responses
   useEffect(() => {
     if (fetcher.state === 'idle' && fetcher.data) {
-      const { success, message, error } = fetcher.data;
-      if (success) {
+      const responseData = fetcher.data?.data || fetcher.data;
+      const { success, message, error } = responseData;
+      
+      if (success !== false) {
         setAlert({ type: 'success', message: message || 'Action completed successfully!' });
-        // Optionally reload or refetch data here if needed
-        // For example, after creating/deleting/updating
+        // Optionally reload data here if needed
       } else {
-        setAlert({ type: 'error', message: error || 'An error occurred.' });
+        setAlert({ type: 'error', message: error || message || 'An error occurred.' });
       }
     }
   }, [fetcher.state, fetcher.data]);
@@ -75,67 +78,55 @@ export default function AutomationsPage() {
     fetcher.submit(
       {
         _action: "updateAutomation",
-        // Assume ID exists or use type as fallback key
-        id: automation.id || automation.type, 
-        type: automation.type, 
-        enabled: String(!automation.enabled),
-        message: automation.message || "",
-        schedule: JSON.stringify(automation.schedule || {})
+        id: automation.id || automation.automationId,
+        userMessage: automation.userMessage || automation.message || automation.defaultMessage || "",
+        isActive: String(!automation.isActive)
       },
       { method: "post" }
     );
-     // Optimistic UI update (optional, but good UX)
-     // You might want to update the local state here, then potentially revert on error
   };
 
+  // Note: Backend doesn't support creating new automations
+  // Users can only configure existing system automations
   const handleCreateAutomation = async () => {
-    // setLoading(true); // Handled by fetcher.state
-    fetcher.submit(
-      {
-        _action: "createAutomation",
-        ...formData,
-        schedule: JSON.stringify(formData.schedule)
-      },
-      { method: "post" }
-    );
-    // Optimistic close & reset
-    setIsCreateModalOpen(false);
-    setFormData({
-      name: '', type: '', message: '', trigger: '', 
-      schedule: { delay: 1, timeUnit: 'hours' }, conditions: []
+    setAlert({ 
+      type: 'info', 
+      message: 'Automations are pre-configured. You can customize existing automations by editing them.' 
     });
-    // Rely on fetcher effect for alert
+    setIsCreateModalOpen(false);
   };
 
    const handleUpdateAutomation = async () => {
      if (!selectedAutomation) return;
-     // Gather updated data (assuming you use controlled inputs in the edit modal)
-     // For this example, let's assume `formData` holds the edited values
+     
+     // Backend only supports updating userMessage and isActive
      fetcher.submit(
        {
          _action: "updateAutomation",
-         id: selectedAutomation.id || selectedAutomation.type,
-         type: selectedAutomation.type, // Usually type is not editable
-         enabled: String(selectedAutomation.enabled), // Keep current status unless changed
-         name: formData.name, // Example: Update name
-         message: formData.message,
-         schedule: JSON.stringify(formData.schedule)
+         id: selectedAutomation.id || selectedAutomation.automationId,
+         userMessage: formData.message || formData.userMessage || selectedAutomation.userMessage || "",
+         isActive: String(formData.isActive !== undefined ? formData.isActive : selectedAutomation.isActive)
        },
        { method: "post" }
      );
      // Optimistic close
      setEditMode(false);
      setSelectedAutomation(null);
-     // Rely on fetcher effect for alert
    };
 
-  const handleDeleteAutomation = (automationId) => {
-    if (confirm('Are you sure you want to delete this automation?')) {
+  // Note: Backend doesn't support deleting automations
+  // Users can only disable automations
+  const handleDeleteAutomation = (automation) => {
+    if (confirm('Are you sure you want to disable this automation?')) {
       fetcher.submit(
-        { _action: "deleteAutomation", id: automationId },
+        {
+          _action: "updateAutomation",
+          id: automation.id || automation.automationId,
+          userMessage: automation.userMessage || automation.message || "",
+          isActive: "false"
+        },
         { method: "post" }
       );
-      // Optimistic alert removed - rely on fetcher effect
     }
   };
 

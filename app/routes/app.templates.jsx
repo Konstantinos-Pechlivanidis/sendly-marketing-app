@@ -1,29 +1,34 @@
 import { serverApi } from "../utils/api.server";
 import { authenticate } from "../shopify.server";
+import { buildQueryString, getPaginationParams } from "../utils/query-params.server";
 import TemplatesPage from "./pages/templates";
 
 export const loader = async ({ request }) => {
   try {
     const { session } = await authenticate.admin(request);
     const url = new URL(request.url);
-    const category = url.searchParams.get("category") || "all";
-    const search = url.searchParams.get("search") || "";
-    const sortBy = url.searchParams.get("sortBy") || "name";
-    const sortOrder = url.searchParams.get("sortOrder") || "asc";
-    const page = url.searchParams.get("page") || "1";
-    const pageSize = url.searchParams.get("pageSize") || "20";
+    
+    // Get pagination with defaults
+    const { page, pageSize } = getPaginationParams(request);
+    
+    // Build query parameters according to backend API spec
+    const queryParams = buildQueryString({
+      category: url.searchParams.get("category") || undefined,
+      isPublic: url.searchParams.get("isPublic") === "true" ? true : undefined,
+    });
 
     const [templates, categories] = await Promise.all([
-      serverApi.get(request, `/templates?category=${category}&search=${search}&sortBy=${sortBy}&sortOrder=${sortOrder}&page=${page}&pageSize=${pageSize}`).catch(() => ({ success: false, data: { templates: [] } })),
+      serverApi.get(request, `/templates?${queryParams}`).catch(() => ({ success: false, data: [] })),
       serverApi.get(request, "/templates/categories").catch(() => ({ success: false, data: [] })),
     ]);
     
     // Backend returns { success: true, data: {...} }
+    // Templates endpoint returns array directly
     // eslint-disable-next-line no-undef
     const isDevelopment = process.env.NODE_ENV === "development";
     return { 
-      templates: templates?.data || { templates: [] }, 
-      categories: categories?.data || [],
+      templates: Array.isArray(templates?.data) ? templates.data : [], 
+      categories: Array.isArray(categories?.data) ? categories.data : [],
       debug: isDevelopment ? {
         sessionId: session?.id,
         shop: session?.shop,

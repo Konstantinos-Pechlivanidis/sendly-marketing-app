@@ -1,5 +1,6 @@
 import { serverApi } from "../utils/api.server";
 import { authenticate } from "../shopify.server";
+import { buildQueryString } from "../utils/query-params.server";
 import ReportsPage from "./pages/reports";
 
 export const loader = async ({ request }) => {
@@ -25,13 +26,17 @@ export const loader = async ({ request }) => {
     const from = fromDate.toISOString().split('T')[0];
     const to = toDate.toISOString().split('T')[0];
 
-    const [overview, campaigns, automations, credits, contacts, messaging] = await Promise.all([
-      serverApi.get(request, `/reports/overview?from=${from}&to=${to}`).catch(() => ({ success: false, data: {} })),
-      serverApi.get(request, `/reports/campaigns?from=${from}&to=${to}`).catch(() => ({ success: false, data: {} })),
-      serverApi.get(request, `/reports/automations?from=${from}&to=${to}`).catch(() => ({ success: false, data: {} })),
-      serverApi.get(request, `/reports/credits?from=${from}&to=${to}`).catch(() => ({ success: false, data: {} })),
-      serverApi.get(request, `/reports/contacts?from=${from}&to=${to}`).catch(() => ({ success: false, data: {} })),
-      serverApi.get(request, `/reports/messaging?from=${from}&to=${to}`).catch(() => ({ success: false, data: {} })),
+    // Build query string properly
+    const queryString = buildQueryString({ from, to });
+
+    const [overview, campaigns, automations, credits, contacts, messaging, kpis] = await Promise.all([
+      serverApi.get(request, `/reports/overview?${queryString}`).catch(() => ({ success: false, data: {} })),
+      serverApi.get(request, `/reports/campaigns?${queryString}`).catch(() => ({ success: false, data: {} })),
+      serverApi.get(request, `/reports/automations?${queryString}`).catch(() => ({ success: false, data: {} })),
+      serverApi.get(request, `/reports/credits?${queryString}`).catch(() => ({ success: false, data: {} })),
+      serverApi.get(request, `/reports/contacts?${queryString}`).catch(() => ({ success: false, data: {} })),
+      serverApi.get(request, `/reports/messaging?${queryString}`).catch(() => ({ success: false, data: {} })),
+      serverApi.get(request, `/reports/kpis?${queryString}`).catch(() => ({ success: false, data: {} })),
     ]);
     
     // Backend returns { success: true, data: {...} }
@@ -44,6 +49,7 @@ export const loader = async ({ request }) => {
       credits: credits?.data || {}, 
       contacts: contacts?.data || {}, 
       messaging: messaging?.data || {},
+      kpis: kpis?.data || {},
       debug: isDevelopment ? {
         sessionId: session?.id,
         shop: session?.shop,
@@ -60,6 +66,7 @@ export const loader = async ({ request }) => {
       credits: {},
       contacts: {},
       messaging: {},
+      kpis: {},
       debug: isDevelopment ? {
         error: error.message,
         timestamp: new Date().toISOString()
@@ -79,7 +86,13 @@ export const action = async ({ request }) => {
       case "exportReports": {
         const fromDate = formData.get("from");
         const toDate = formData.get("to");
-        return await serverApi.get(request, `/reports/export?type=${formData.get("type") || "campaigns"}&format=${formData.get("format") || "csv"}&from=${fromDate}&to=${toDate}`);
+        const queryString = buildQueryString({
+          type: formData.get("type") || "campaigns",
+          format: formData.get("format") || "csv",
+          from: fromDate,
+          to: toDate,
+        });
+        return await serverApi.get(request, `/reports/export?${queryString}`);
       }
       
       default:

@@ -1,28 +1,29 @@
 import { serverApi } from "../utils/api.server";
 import { authenticate } from "../shopify.server";
+import { buildQueryString } from "../utils/query-params.server";
 import AutomationsPage from "./pages/automations";
 
 export const loader = async ({ request }) => {
   try {
     const { session } = await authenticate.admin(request);
     const url = new URL(request.url);
-    const status = url.searchParams.get("status") || "";
-    const type = url.searchParams.get("type") || "";
-    const search = url.searchParams.get("search") || "";
-    const sortBy = url.searchParams.get("sortBy") || "name";
-    const sortOrder = url.searchParams.get("sortOrder") || "asc";
-
-    const [automations, stats] = await Promise.all([
-      serverApi.get(request, `/automations?status=${status}&type=${type}&search=${search}&sortBy=${sortBy}&sortOrder=${sortOrder}`).catch(() => ({ success: false, data: { automations: [] } })),
+    
+    // Build query parameters - backend doesn't have search param for automations
+    // Automations endpoint returns all automations for the shop
+    const [automations, stats, defaults] = await Promise.all([
+      serverApi.get(request, "/automations").catch(() => ({ success: false, data: [] })),
       serverApi.get(request, "/automations/stats").catch(() => ({ success: false, data: {} })),
+      serverApi.get(request, "/automations/defaults").catch(() => ({ success: false, data: [] })),
     ]);
     
     // Backend returns { success: true, data: {...} }
+    // Automations endpoint returns array directly, not wrapped
     // eslint-disable-next-line no-undef
     const isDevelopment = process.env.NODE_ENV === "development";
     return { 
-      automations: automations?.data || { automations: [] }, 
+      automations: Array.isArray(automations?.data) ? automations.data : [], 
       stats: stats?.data || {},
+      defaults: Array.isArray(defaults?.data) ? defaults.data : [],
       debug: isDevelopment ? {
         sessionId: session?.id,
         shop: session?.shop,
@@ -33,8 +34,9 @@ export const loader = async ({ request }) => {
     // eslint-disable-next-line no-undef
     const isDevelopment = process.env.NODE_ENV === "development";
     return { 
-      automations: { automations: [] }, 
+      automations: [], 
       stats: {},
+      defaults: [],
       debug: isDevelopment ? {
         error: error.message,
         timestamp: new Date().toISOString()
@@ -51,12 +53,14 @@ export const action = async ({ request }) => {
     await authenticate.admin(request);
     
     switch (action) {
-      case "updateAutomation":
+      case "updateAutomation": {
         // Backend only supports updating userMessage and isActive
-        return await serverApi.put(request, `/automations/${formData.get("id")}`, {
+        const result = await serverApi.put(request, `/automations/${formData.get("id")}`, {
           userMessage: formData.get("userMessage") || formData.get("message"),
-          isActive: formData.get("isActive") === "true"
+          isActive: formData.get("isActive") === "true" || formData.get("isActive") === true
         });
+        return result;
+      }
       
       default:
         return { error: "Unknown action" };

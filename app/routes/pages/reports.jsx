@@ -18,11 +18,14 @@ export default function ReportsPage() {
   const data = useLoaderData();
   const fetcher = useFetcher();
   
-  const overview = data?.overview?.data || {};
-  const campaigns = data?.campaigns?.data || {};
-  const automations = data?.automations?.data || {};
-  const messaging = data?.messaging?.data || {};
-  const revenue = data?.revenue?.data || {};
+  // Adapt to backend response structure
+  const overview = data?.overview || {};
+  const campaigns = data?.campaigns || {};
+  const automations = data?.automations || {};
+  const messaging = data?.messaging || {};
+  const credits = data?.credits || {};
+  const contacts = data?.contacts || {};
+  const kpis = data?.kpis || {};
 
   const [dateRange, setDateRange] = useState("30d");
   // const [loading, setLoading] = useState(false); // Use fetcher.state instead
@@ -46,44 +49,66 @@ export default function ReportsPage() {
   // Handle fetcher responses
   useEffect(() => {
     if (fetcher.state === 'idle' && fetcher.data) {
-      const { success, message, error } = fetcher.data;
-      if (success) {
+      const responseData = fetcher.data?.data || fetcher.data;
+      const { success, message, error } = responseData;
+      
+      if (success !== false) {
         setAlert({ type: 'success', message: message || 'Action completed successfully!' });
       } else {
-        setAlert({ type: 'error', message: error || 'An error occurred.' });
+        setAlert({ type: 'error', message: error || message || 'An error occurred.' });
       }
     }
   }, [fetcher.state, fetcher.data]);
 
+  // Refresh data by submitting to reload via fetcher
   const handleRefreshData = () => {
-    fetcher.submit(
-      { _action: "refreshReports", dateRange: filters.dateRange },
-      { method: "post" }
-    );
+    // Use fetcher to reload data
+    fetcher.load(window.location.pathname + window.location.search);
   };
 
   const handleExportReports = () => {
+    // Calculate date range
+    const toDate = new Date();
+    const fromDate = new Date();
+    const range = filters.dateRange || "30d";
+    if (range === "7d") {
+      fromDate.setDate(fromDate.getDate() - 7);
+    } else if (range === "30d") {
+      fromDate.setDate(fromDate.getDate() - 30);
+    } else if (range === "90d") {
+      fromDate.setDate(fromDate.getDate() - 90);
+    }
+    const from = fromDate.toISOString().split('T')[0];
+    const to = toDate.toISOString().split('T')[0];
+    
+    // Determine export type
+    const exportTypes = [];
+    if (exportData.campaigns) exportTypes.push('campaigns');
+    if (exportData.automations) exportTypes.push('automations');
+    if (exportData.messaging) exportTypes.push('messaging');
+    if (exportData.revenue) exportTypes.push('credits');
+    const type = exportTypes.length === 1 ? exportTypes[0] : 'all';
+    
     fetcher.submit(
       {
         _action: "exportReports",
+        type,
         format: exportFormat,
-        dateRange: filters.dateRange,
-        ...exportData
+        from,
+        to
       },
       { method: "post" }
     );
-    setIsExportModalOpen(false); // Close modal optimistically
+    setIsExportModalOpen(false);
   };
 
+  // Note: Backend doesn't support scheduled reports
+  // This would be a future feature
   const handleScheduleReport = () => {
-    fetcher.submit(
-      {
-        _action: "scheduleReport",
-        dateRange: filters.dateRange,
-        frequency: 'weekly' // Example frequency
-      },
-      { method: "post" }
-    );
+    setAlert({ 
+      type: 'info', 
+      message: 'Scheduled reports feature is coming soon!' 
+    });
   };
 
   const getGrowthColor = (growth) => {

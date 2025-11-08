@@ -38,67 +38,46 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (fetcher.state === 'idle' && fetcher.data) {
-      const { success, message, error, action } = fetcher.data;
+      const responseData = fetcher.data?.data || fetcher.data;
+      const { success, message, error } = responseData;
 
-      if (success) {
+      if (success !== false) {
         setAlert({ type: 'success', message: message || 'Action completed successfully!' });
-
-        // Reset forms/modals on success
-        if (action === 'processPayment') {
-          setIsPaymentModalOpen(false);
-        }
-        if (action === 'submitSupport') {
-          setSupportMessage('');
-          setSupportSubject('');
-          setIsSupportModalOpen(false);
+        
+        // Handle purchase response - may redirect to Stripe checkout
+        if (responseData?.data?.checkoutUrl) {
+          window.location.href = responseData.data.checkoutUrl;
+          return;
         }
       } else {
-        // Show error alert if the server response indicates failure
-        setAlert({ type: 'error', message: error || 'An error occurred.' });
+        setAlert({ type: 'error', message: error || message || 'An error occurred.' });
       }
     }
   }, [fetcher.state, fetcher.data]);
 
+  const handleSaveSettings = () => {
+    fetcher.submit(
+      { 
+        _action: "saveSettings", 
+        senderNumber: providerApiKey, 
+        senderName: senderId 
+      },
+      { method: "post" }
+    );
+  };
 
   const handlePurchase = () => {
     if (selectedPackage) {
       fetcher.submit(
-        { _action: "purchasePackage", packageId: selectedPackage },
+        {
+          _action: "purchasePackage",
+          packageId: selectedPackage,
+          successUrl: `${window.location.origin}/app/settings`,
+          cancelUrl: `${window.location.origin}/app/settings`
+        },
         { method: "post" }
       );
     }
-  };
-
-  const handleSaveSettings = () => {
-    fetcher.submit(
-      { _action: "saveSettings", providerApiKey, senderId },
-      { method: "post" }
-    );
-  };
-
-  const handleProcessPayment = () => {
-    fetcher.submit(
-      {
-        _action: "processPayment",
-        packageId: selectedPackage,
-        paymentMethod,
-        amount: packages.find(p => p.id === selectedPackage)?.price || 0,
-        action: 'processPayment' // Send action name to get it back in response
-      },
-      { method: "post" }
-    );
-  };
-
-  const handleSubmitSupport = () => {
-    fetcher.submit(
-      {
-        _action: "submitSupport",
-        subject: supportSubject,
-        message: supportMessage,
-        action: 'submitSupport' // Send action name to get it back in response
-      },
-      { method: "post" }
-    );
   };
 
   const handleExportTransactions = () => {

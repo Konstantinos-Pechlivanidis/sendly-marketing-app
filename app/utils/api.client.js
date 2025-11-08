@@ -468,12 +468,11 @@ const api = {
     update: (id, data) => request(`/contacts/${id}`, { method: 'PUT', body: data }),
     delete: (id) => request(`/contacts/${id}`, { method: 'DELETE' }),
     import: (data) => request('/contacts/import', { method: 'POST', body: data }),
-    export: (params = {}) => {
-      const queryString = new URLSearchParams(params).toString();
-      return request(`/contacts/export?${queryString}`, { method: 'GET' });
-    },
     stats: () => request('/contacts/stats', { method: 'GET' }),
-    validate: (data) => request('/contacts/validate', { method: 'POST', body: data }),
+    birthdays: (params = {}) => {
+      const queryString = new URLSearchParams(params).toString();
+      return request(`/contacts/birthdays?${queryString}`, { method: 'GET' });
+    },
   },
 
   // ============================================================================
@@ -488,12 +487,10 @@ const api = {
     create: (data) => request('/campaigns', { method: 'POST', body: data }),
     update: (id, data) => request(`/campaigns/${id}`, { method: 'PUT', body: data }),
     delete: (id) => request(`/campaigns/${id}`, { method: 'DELETE' }),
+    prepare: (id) => request(`/campaigns/${id}/prepare`, { method: 'POST' }),
     send: (id) => request(`/campaigns/${id}/send`, { method: 'POST' }),
-    schedule: (id, data) => request(`/campaigns/${id}/schedule`, { method: 'POST', body: data }),
-    cancel: (id) => request(`/campaigns/${id}/cancel`, { method: 'POST' }),
-    duplicate: (id) => request(`/campaigns/${id}/duplicate`, { method: 'POST' }),
-    stats: (id) => request(`/campaigns/${id}/stats`, { method: 'GET' }),
-    audience: (id) => request(`/campaigns/${id}/audience`, { method: 'GET' }),
+    schedule: (id, data) => request(`/campaigns/${id}/schedule`, { method: 'PUT', body: data }),
+    metrics: (id) => request(`/campaigns/${id}/metrics`, { method: 'GET' }),
   },
 
   // ============================================================================
@@ -535,9 +532,17 @@ const api = {
       const queryString = new URLSearchParams(params).toString();
       return request(`/reports/overview?${queryString}`, { method: 'GET' });
     },
+    kpis: (params = {}) => {
+      const queryString = new URLSearchParams(params).toString();
+      return request(`/reports/kpis?${queryString}`, { method: 'GET' });
+    },
     campaigns: (params = {}) => {
       const queryString = new URLSearchParams(params).toString();
       return request(`/reports/campaigns?${queryString}`, { method: 'GET' });
+    },
+    campaign: (id, params = {}) => {
+      const queryString = new URLSearchParams(params).toString();
+      return request(`/reports/campaigns/${id}?${queryString}`, { method: 'GET' });
     },
     contacts: (params = {}) => {
       const queryString = new URLSearchParams(params).toString();
@@ -546,6 +551,14 @@ const api = {
     automations: (params = {}) => {
       const queryString = new URLSearchParams(params).toString();
       return request(`/reports/automations?${queryString}`, { method: 'GET' });
+    },
+    messaging: (params = {}) => {
+      const queryString = new URLSearchParams(params).toString();
+      return request(`/reports/messaging?${queryString}`, { method: 'GET' });
+    },
+    credits: (params = {}) => {
+      const queryString = new URLSearchParams(params).toString();
+      return request(`/reports/credits?${queryString}`, { method: 'GET' });
     },
     export: (params = {}) => {
       const queryString = new URLSearchParams(params).toString();
@@ -563,28 +576,66 @@ const api = {
       const queryString = new URLSearchParams(params).toString();
       return request(`/billing/history?${queryString}`, { method: 'GET' });
     },
-    checkout: (data) => request('/billing/checkout', { method: 'POST', body: data }),
-    webhook: (data) => request('/billing/webhook', { method: 'POST', body: data }),
+    billingHistory: (params = {}) => {
+      const queryString = new URLSearchParams(params).toString();
+      return request(`/billing/billing-history?${queryString}`, { method: 'GET' });
+    },
+    purchase: (data) => request('/billing/purchase', { method: 'POST', body: data }),
   },
 
   settings: {
     get: () => request('/settings', { method: 'GET' }),
-    update: (data) => request('/settings', { method: 'PUT', body: data }),
-    testSms: (data) => request('/settings/test-sms', { method: 'POST', body: data }),
+    account: () => request('/settings/account', { method: 'GET' }),
+    updateSender: (data) => request('/settings/sender', { method: 'PUT', body: data }),
   },
 
   // ============================================================================
-  // TRACKING & WEBHOOKS
+  // AUDIENCES
+  // ============================================================================
+  audiences: {
+    list: () => request('/audiences', { method: 'GET' }),
+    details: (audienceId, params = {}) => {
+      const queryString = new URLSearchParams(params).toString();
+      return request(`/audiences/${audienceId}/details?${queryString}`, { method: 'GET' });
+    },
+    validate: (data) => request('/audiences/validate', { method: 'POST', body: data }),
+  },
+
+  // ============================================================================
+  // DISCOUNTS
+  // ============================================================================
+  discounts: {
+    list: (params = {}) => {
+      const queryString = new URLSearchParams(params).toString();
+      return request(`/discounts?${queryString}`, { method: 'GET' });
+    },
+    get: (id) => request(`/discounts/${id}`, { method: 'GET' }),
+    validate: (code) => request(`/discounts/validate/${code}`, { method: 'GET' }),
+  },
+
+  // ============================================================================
+  // TRACKING
   // ============================================================================
   tracking: {
-    status: (messageId) => request(`/tracking/${messageId}/status`, { method: 'GET' }),
-    webhook: (data) => request('/tracking/webhook', { method: 'POST', body: data }),
+    mitto: (messageId) => request(`/tracking/mitto/${messageId}`, { method: 'GET' }),
+    campaign: (campaignId) => request(`/tracking/campaign/${campaignId}`, { method: 'GET' }),
   },
 
   // ============================================================================
-  // UTILITY METHODS
+  // HEALTH & CORE
   // ============================================================================
-  health: () => request('/health', { method: 'GET' }),
+  health: {
+    basic: () => request('/health', { method: 'GET' }),
+    config: () => request('/health/config', { method: 'GET' }),
+    full: () => request('/health/full', { method: 'GET' }),
+  },
+  
+  metrics: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return request(`/metrics?${queryString}`, { method: 'GET' });
+  },
+  
+  whoami: () => request('/whoami', { method: 'GET' }),
   
   // Get current shop domain
   getShopDomain: () => getShopDomain(),
